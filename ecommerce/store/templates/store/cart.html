@@ -1,0 +1,92 @@
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block title %}Shopping Cart — ShopVerse{% endblock %}
+
+{% block content %}
+<div class="page-header-sm">
+  <div class="container">
+    <h1 class="page-title">Shopping Cart <span class="cart-count-title">{{ cart_count }} item{% if cart_count != 1 %}s{% endif %}</span></h1>
+  </div>
+</div>
+
+<div class="container section-padding">
+  {% if cart_items %}
+  <div class="row g-4">
+    <!-- Cart Items -->
+    <div class="col-lg-8">
+      <div class="cart-card">
+        <div class="cart-header">
+          <span>Product</span><span>Price</span><span>Qty</span><span>Subtotal</span><span></span>
+        </div>
+        {% for item in cart_items %}
+        <div class="cart-item">
+          <div class="cart-product-info">
+            <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" class="cart-item-img"/>
+            <div>
+              <a href="{% url 'product_detail' item.product.pk %}" class="cart-item-name">{{ item.product.name }}</a>
+              <div class="cart-item-cat">{{ item.product.category.name }}</div>
+              {% if not item.product.in_stock %}
+              <span class="badge bg-danger-soft text-danger mt-1">Out of Stock</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="cart-item-price">₹{{ item.product.price }}</div>
+          <div class="cart-qty-control">
+            <form method="post" action="{% url 'update_cart' item.pk %}" class="d-flex align-items-center gap-1">
+              {% csrf_token %}
+              <button type="submit" name="quantity" value="{{ item.quantity|add:'-1' }}" class="qty-btn">-</button>
+              <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}" class="qty-input" onchange="this.form.submit()"/>
+              <button type="submit" name="quantity" value="{{ item.quantity|add:'1' }}" class="qty-btn">+</button>
+            </form>
+          </div>
+          <div class="cart-item-subtotal">₹{{ item.subtotal }}</div>
+          <div>
+            <a href="{% url 'remove_from_cart' item.pk %}" class="btn btn-remove-cart" onclick="return confirm('Remove this item?')" title="Remove">
+              <i class="bi bi-trash3"></i>
+            </a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="d-flex justify-content-between mt-3">
+        <a href="{% url 'product_list' %}" class="btn btn-continue-shop"><i class="bi bi-arrow-left me-2"></i>Continue Shopping</a>
+      </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="col-lg-4">
+      <div class="summary-card">
+        <h5 class="summary-title"><i class="bi bi-receipt me-2"></i>Order Summary</h5>
+        <div class="summary-row"><span>Subtotal</span><span>₹{{ subtotal }}</span></div>
+        <div class="summary-row"><span>GST (18%)</span><span>₹{{ tax }}</span></div>
+        <div class="summary-row text-success"><span><i class="bi bi-truck me-1"></i>Delivery</span><span>{% if subtotal > 999 %}FREE{% else %}₹49{% endif %}</span></div>
+        <div class="summary-divider"></div>
+        <div class="summary-total"><span>Total</span><span>₹{{ total }}</span></div>
+        <a href="{% url 'checkout' %}" class="btn btn-checkout w-100 mt-3">
+          <i class="bi bi-lock-fill me-2"></i>Proceed to Checkout
+        </a>
+        <div class="secure-note mt-3"><i class="bi bi-shield-lock me-1"></i>Secure & Encrypted Checkout</div>
+      </div>
+
+      <!-- Coupon -->
+      <div class="coupon-card mt-3">
+        <h6 class="mb-2"><i class="bi bi-ticket-perforated me-2"></i>Have a Coupon?</h6>
+        <div class="input-group">
+          <input type="text" class="form-control" placeholder="Enter coupon code"/>
+          <button class="btn btn-outline-primary" type="button">Apply</button>
+        </div>
+        <small class="text-muted mt-1 d-block">Try: WELCOME20 for 20% off</small>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-state py-5">
+    <div class="empty-icon">🛒</div>
+    <h4>Your cart is empty</h4>
+    <p>Looks like you haven't added anything to your cart yet.</p>
+    <a href="{% url 'product_list' %}" class="btn btn-primary-nav mt-3"><i class="bi bi-bag me-2"></i>Start Shopping</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

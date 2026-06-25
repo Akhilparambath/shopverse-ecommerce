@@ -1,0 +1,195 @@
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block title %}ShopVerse — Premium Online Shopping{% endblock %}
+
+{% block content %}
+
+<!-- ── HERO ──────────────────────────────────────────── -->
+<section class="hero-section">
+  <div class="hero-bg-gradient"></div>
+  <div class="hero-particles"></div>
+  <div class="container hero-content text-center">
+    <div class="hero-badge mb-4">
+      <i class="bi bi-stars me-1"></i> New Arrivals Just Dropped
+    </div>
+    <h1 class="hero-title">Discover Products<br><span class="gradient-text">You'll Love</span></h1>
+    <p class="hero-subtitle">Shop the latest trends across Electronics, Fashion, Books, Sports & more — all in one place.</p>
+    <div class="hero-cta">
+      <a href="{% url 'product_list' %}" class="btn btn-hero-primary">
+        <i class="bi bi-bag-heart me-2"></i>Shop Now
+      </a>
+      {% if not user.is_authenticated %}
+      <a href="{% url 'register' %}" class="btn btn-hero-secondary">
+        <i class="bi bi-person-plus me-2"></i>Join Free
+      </a>
+      {% endif %}
+    </div>
+    <div class="hero-stats mt-5">
+      <div class="hero-stat"><span class="stat-num">500+</span><span class="stat-label">Products</span></div>
+      <div class="hero-stat"><span class="stat-num">50K+</span><span class="stat-label">Happy Customers</span></div>
+      <div class="hero-stat"><span class="stat-num">99%</span><span class="stat-label">Satisfaction</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES BAR ──────────────────────────────────── -->
+<section class="features-bar">
+  <div class="container">
+    <div class="row g-3">
+      <div class="col-6 col-md-3">
+        <div class="feature-item"><i class="bi bi-truck feature-icon"></i><div><strong>Free Shipping</strong><small>On orders over ₹999</small></div></div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="feature-item"><i class="bi bi-shield-check feature-icon"></i><div><strong>Secure Payment</strong><small>100% protected</small></div></div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="feature-item"><i class="bi bi-arrow-counterclockwise feature-icon"></i><div><strong>Easy Returns</strong><small>30-day policy</small></div></div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="feature-item"><i class="bi bi-headset feature-icon"></i><div><strong>24/7 Support</strong><small>Always here for you</small></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CATEGORIES ─────────────────────────────────────── -->
+<section class="section-padding">
+  <div class="container">
+    <div class="section-header text-center mb-5">
+      <span class="section-badge">Browse</span>
+      <h2 class="section-title">Shop by Category</h2>
+      <p class="section-subtitle">Find exactly what you're looking for</p>
+    </div>
+    <div class="row g-3 justify-content-center">
+      {% for cat in categories %}
+      {% with forloop.counter as i %}
+      <div class="col-6 col-md-4 col-lg-2">
+        <a href="{% url 'product_list' %}?category={{ cat.slug }}" class="category-card cat-color-{{ i|divisibleby:6|yesno:'6,' }}{{ i }}">
+          <div class="cat-icon">
+            {% if cat.name == 'Electronics' %}🔌
+            {% elif cat.name == 'Clothing' or cat.name == 'Fashion' %}👗
+            {% elif cat.name == 'Books' %}📚
+            {% elif cat.name == 'Sports' %}⚽
+            {% elif cat.name == 'Beauty' %}💄
+            {% elif cat.name == 'Home' or cat.name == 'Home & Kitchen' %}🏠
+            {% elif cat.name == 'Toys' %}🧸
+            {% elif cat.name == 'Grocery' %}🛒
+            {% else %}🛍️{% endif %}
+          </div>
+          <div class="cat-name">{{ cat.name }}</div>
+          <div class="cat-count">{{ cat.products.count }} items</div>
+        </a>
+      </div>
+      {% endwith %}
+      {% empty %}
+      <p class="text-muted text-center">No categories yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURED PRODUCTS ──────────────────────────────── -->
+<section class="section-padding bg-section-alt">
+  <div class="container">
+    <div class="section-header d-flex align-items-center justify-content-between mb-5">
+      <div>
+        <span class="section-badge">Top Picks</span>
+        <h2 class="section-title mb-0">Featured Products</h2>
+      </div>
+      <a href="{% url 'product_list' %}?sort=popular" class="btn btn-outline-view">View All <i class="bi bi-arrow-right ms-1"></i></a>
+    </div>
+    <div class="row g-4">
+      {% for product in featured_products %}
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="product-card">
+          <a href="{% url 'product_detail' product.pk %}" class="product-img-link">
+            <img src="{{ product.image_url }}" alt="{{ product.name }}" class="product-img" loading="lazy"/>
+            {% if not product.in_stock %}
+            <div class="out-of-stock-overlay"><span>Out of Stock</span></div>
+            {% endif %}
+            <div class="product-overlay">
+              <i class="bi bi-eye-fill"></i> Quick View
+            </div>
+          </a>
+          <div class="product-body">
+            <a href="{% url 'product_list' %}?category={{ product.category.slug }}" class="product-category">{{ product.category.name }}</a>
+            <h6 class="product-name"><a href="{% url 'product_detail' product.pk %}">{{ product.name }}</a></h6>
+            <div class="product-footer">
+              <span class="product-price">₹{{ product.price }}</span>
+              {% if product.in_stock %}
+              <a href="{% url 'add_to_cart' product.pk %}?next=home" class="btn btn-add-cart">
+                <i class="bi bi-cart-plus"></i>
+              </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-12 text-center py-4"><p class="text-muted">No products available yet.</p></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ── LATEST PRODUCTS ────────────────────────────────── -->
+<section class="section-padding">
+  <div class="container">
+    <div class="section-header d-flex align-items-center justify-content-between mb-5">
+      <div>
+        <span class="section-badge">New</span>
+        <h2 class="section-title mb-0">Latest Arrivals</h2>
+      </div>
+      <a href="{% url 'product_list' %}?sort=newest" class="btn btn-outline-view">View All <i class="bi bi-arrow-right ms-1"></i></a>
+    </div>
+    <div class="row g-4">
+      {% for product in latest_products %}
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="product-card">
+          <a href="{% url 'product_detail' product.pk %}" class="product-img-link">
+            <img src="{{ product.image_url }}" alt="{{ product.name }}" class="product-img" loading="lazy"/>
+            <span class="new-badge">NEW</span>
+            {% if not product.in_stock %}
+            <div class="out-of-stock-overlay"><span>Out of Stock</span></div>
+            {% endif %}
+            <div class="product-overlay"><i class="bi bi-eye-fill"></i> Quick View</div>
+          </a>
+          <div class="product-body">
+            <a href="{% url 'product_list' %}?category={{ product.category.slug }}" class="product-category">{{ product.category.name }}</a>
+            <h6 class="product-name"><a href="{% url 'product_detail' product.pk %}">{{ product.name }}</a></h6>
+            <div class="product-footer">
+              <span class="product-price">₹{{ product.price }}</span>
+              {% if product.in_stock %}
+              <a href="{% url 'add_to_cart' product.pk %}?next=home" class="btn btn-add-cart">
+                <i class="bi bi-cart-plus"></i>
+              </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ── PROMO BANNER ───────────────────────────────────── -->
+<section class="promo-section">
+  <div class="container">
+    <div class="promo-card">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <div class="promo-badge">🎉 Limited Time Offer</div>
+          <h2 class="promo-title">Get 20% off on your first order!</h2>
+          <p class="promo-text">Use code <strong>WELCOME20</strong> at checkout. Valid for new customers only.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+          <a href="{% url 'product_list' %}" class="btn btn-promo">Shop Now <i class="bi bi-arrow-right ms-1"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

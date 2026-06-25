@@ -1,0 +1,980 @@
+{% extends 'store/base.html' %}
+{% block title %}Loyalty Rewards — ShopVerse{% endblock %}
+{% block meta_desc %}Earn points, unlock tiers and redeem amazing rewards on ShopVerse.{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ═══════════════════════════════════════════════
+   LOYALTY REWARDS PAGE
+═══════════════════════════════════════════════ */
+
+/* ── PAGE HEADER ── */
+.loyalty-hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #2d1b69 70%, #0f172a 100%);
+  padding: 3.5rem 0 2rem;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.loyalty-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 70% at 15% 50%, rgba(99,102,241,0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 85% 30%, rgba(139,92,246,0.14) 0%, transparent 60%);
+  pointer-events: none;
+}
+.loyalty-hero-content { position: relative; z-index: 1; }
+.lh-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.35);
+  color: #f59e0b; padding: 0.3rem 0.9rem; border-radius: 20px;
+  font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 0.9rem;
+}
+.lh-title {
+  font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 900;
+  line-height: 1.1; letter-spacing: -1px; margin-bottom: 0.75rem;
+}
+.lh-subtitle { color: #94a3b8; font-size: 1rem; max-width: 520px; }
+
+/* ── BALANCE CARD ── */
+.balance-card {
+  background: linear-gradient(135deg, #1e1b4b 0%, #2d1b69 50%, #1e1b4b 100%);
+  border: 1px solid rgba(139,92,246,0.35);
+  border-radius: 20px; padding: 2rem;
+  position: relative; overflow: hidden;
+  box-shadow: 0 20px 60px rgba(99,102,241,0.25);
+}
+.balance-card::before {
+  content: '';
+  position: absolute; right: -60px; top: -60px;
+  width: 220px; height: 220px;
+  background: radial-gradient(circle, rgba(139,92,246,0.3), transparent 65%);
+  pointer-events: none;
+}
+.balance-card::after {
+  content: '⭐';
+  position: absolute; right: 1.5rem; bottom: 1.5rem;
+  font-size: 5rem; opacity: 0.06; line-height: 1;
+}
+.bc-label { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #a78bfa; margin-bottom: 0.3rem; }
+.bc-points {
+  font-size: clamp(3rem, 8vw, 4.5rem); font-weight: 900; line-height: 1;
+  background: linear-gradient(135deg, #c4b5fd, #818cf8, #f0abfc);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.bc-pts-label { color: #a78bfa; font-size: 1rem; font-weight: 500; margin-top: 0.15rem; }
+.bc-divider { width: 1px; background: rgba(255,255,255,0.12); align-self: stretch; }
+.bc-stat-val { font-size: 1.6rem; font-weight: 800; }
+.bc-stat-label { font-size: 0.78rem; color: #94a3b8; margin-top: 0.15rem; }
+.bc-stat-earned .bc-stat-val { color: #34d399; }
+.bc-stat-redeemed .bc-stat-val { color: #f87171; }
+
+/* Progress Bar */
+.tier-progress-wrap { margin-top: 1.5rem; }
+.tier-progress-label {
+  display: flex; justify-content: space-between;
+  font-size: 0.82rem; color: #94a3b8; margin-bottom: 0.5rem;
+}
+.tier-progress-label span:last-child { color: #a78bfa; font-weight: 600; }
+.tier-progress-bar {
+  height: 10px; background: rgba(255,255,255,0.08);
+  border-radius: 20px; overflow: hidden;
+}
+.tier-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #818cf8, #a855f7, #f0abfc);
+  border-radius: 20px;
+  transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+.tier-progress-fill::after {
+  content: '';
+  position: absolute; right: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #f0abfc;
+  box-shadow: 0 0 10px rgba(240,171,252,0.6);
+}
+.tier-progress-hint { font-size: 0.8rem; color: #94a3b8; margin-top: 0.5rem; text-align: center; }
+.tier-progress-hint span { color: #a78bfa; font-weight: 600; }
+
+/* ── TIER SECTION ── */
+.section-label-line {
+  display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2rem;
+}
+.section-label-line::after {
+  content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.07);
+}
+.section-label-badge {
+  background: rgba(99,102,241,0.12); color: #818cf8;
+  border: 1px solid rgba(99,102,241,0.2);
+  padding: 0.3rem 0.9rem; border-radius: 20px;
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px;
+  text-transform: uppercase; white-space: nowrap;
+}
+
+.tier-card {
+  background: #1e293b; border: 2px solid rgba(255,255,255,0.07);
+  border-radius: 18px; padding: 1.75rem;
+  transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+  position: relative; overflow: hidden; height: 100%;
+}
+.tier-card::before {
+  content: ''; position: absolute; inset: 0;
+  border-radius: 18px; opacity: 0; transition: opacity 0.35s;
+}
+.tier-card:hover { transform: translateY(-6px); }
+.tier-card.active-tier { border-color: rgba(167,139,250,0.6); }
+.tier-card.active-tier::after {
+  content: 'CURRENT TIER';
+  position: absolute; top: 0.9rem; right: 0.9rem;
+  background: rgba(167,139,250,0.2); color: #a78bfa;
+  font-size: 0.6rem; font-weight: 800; letter-spacing: 1.5px;
+  padding: 0.2rem 0.6rem; border-radius: 10px; border: 1px solid rgba(167,139,250,0.3);
+}
+
+/* Bronze */
+.tier-bronze { border-color: rgba(205,127,50,0.3); }
+.tier-bronze:hover { border-color: rgba(205,127,50,0.7); box-shadow: 0 15px 40px rgba(205,127,50,0.15); }
+.tier-bronze .tier-icon-wrap { background: linear-gradient(135deg, #92400e, #cd7f32); }
+.tier-bronze .tier-name { color: #f59e0b; }
+/* Silver */
+.tier-silver { border-color: rgba(192,192,192,0.3); }
+.tier-silver:hover { border-color: rgba(192,192,192,0.7); box-shadow: 0 15px 40px rgba(192,192,192,0.12); }
+.tier-silver .tier-icon-wrap { background: linear-gradient(135deg, #475569, #94a3b8); }
+.tier-silver .tier-name { color: #cbd5e1; }
+/* Gold */
+.tier-gold { border-color: rgba(250,204,21,0.3); }
+.tier-gold:hover { border-color: rgba(250,204,21,0.7); box-shadow: 0 15px 40px rgba(250,204,21,0.15); }
+.tier-gold .tier-icon-wrap { background: linear-gradient(135deg, #92400e, #facc15); }
+.tier-gold .tier-name { color: #facc15; }
+/* Platinum */
+.tier-platinum { border-color: rgba(165,243,252,0.3); }
+.tier-platinum:hover { border-color: rgba(165,243,252,0.7); box-shadow: 0 15px 40px rgba(165,243,252,0.12); }
+.tier-platinum .tier-icon-wrap { background: linear-gradient(135deg, #164e63, #67e8f9); }
+.tier-platinum .tier-name { color: #67e8f9; }
+
+.tier-icon-wrap {
+  width: 56px; height: 56px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem; margin-bottom: 1rem;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+}
+.tier-name { font-size: 1.1rem; font-weight: 800; margin-bottom: 0.2rem; }
+.tier-points-req { font-size: 0.78rem; color: #64748b; margin-bottom: 1rem; }
+.tier-benefits { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.45rem; }
+.tier-benefits li { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: #94a3b8; }
+.tier-benefits li i { color: #818cf8; font-size: 0.85rem; flex-shrink: 0; }
+
+/* ── EARN POINTS ── */
+.earn-card {
+  background: #1e293b; border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px; padding: 1.5rem;
+  display: flex; align-items: flex-start; gap: 1rem;
+  transition: all 0.3s ease;
+}
+.earn-card:hover { border-color: rgba(99,102,241,0.4); transform: translateY(-4px); box-shadow: 0 15px 35px rgba(0,0,0,0.25); }
+.earn-icon-wrap {
+  width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+}
+.earn-icon-purple { background: rgba(99,102,241,0.15); }
+.earn-icon-green  { background: rgba(16,185,129,0.15); }
+.earn-icon-blue   { background: rgba(59,130,246,0.15); }
+.earn-icon-pink   { background: rgba(236,72,153,0.15); }
+.earn-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.25rem; }
+.earn-desc { font-size: 0.8rem; color: #64748b; line-height: 1.5; margin-bottom: 0.5rem; }
+.earn-pts-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(99,102,241,0.15); color: #818cf8;
+  border: 1px solid rgba(99,102,241,0.25);
+  padding: 0.15rem 0.6rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+}
+
+/* ── REDEEM CARDS ── */
+.redeem-card {
+  background: #1e293b; border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 18px; overflow: hidden;
+  transition: all 0.35s ease; height: 100%;
+  display: flex; flex-direction: column;
+}
+.redeem-card:hover { transform: translateY(-6px); border-color: rgba(99,102,241,0.4); box-shadow: 0 20px 50px rgba(0,0,0,0.35); }
+.redeem-img-wrap { position: relative; padding: 1.5rem; background: rgba(255,255,255,0.03); text-align: center; }
+.redeem-icon { font-size: 3.5rem; display: block; }
+.redeem-pts-badge {
+  position: absolute; top: 0.75rem; right: 0.75rem;
+  background: rgba(99,102,241,0.9); color: #fff;
+  padding: 0.25rem 0.65rem; border-radius: 10px; font-size: 0.72rem; font-weight: 800;
+}
+.redeem-body { padding: 1.25rem; flex: 1; display: flex; flex-direction: column; }
+.redeem-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.4rem; }
+.redeem-desc { font-size: 0.8rem; color: #64748b; flex: 1; margin-bottom: 1rem; line-height: 1.5; }
+.btn-redeem {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border: none; color: #fff; padding: 0.6rem 1.25rem;
+  border-radius: 10px; font-weight: 700; font-size: 0.85rem;
+  transition: all 0.3s ease; width: 100%;
+}
+.btn-redeem:hover { opacity: 0.9; transform: translateY(-1px); color: #fff; box-shadow: 0 8px 20px rgba(99,102,241,0.4); }
+.btn-redeem:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+/* ── POINTS HISTORY TABLE ── */
+.history-table-wrap {
+  background: #1e293b; border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 18px; overflow: hidden;
+}
+.history-table-wrap table { margin: 0; }
+.history-table-wrap thead th {
+  background: rgba(255,255,255,0.04); color: #64748b;
+  font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  border: none; padding: 0.9rem 1.25rem;
+}
+.history-table-wrap tbody td {
+  color: #e2e8f0; font-size: 0.875rem;
+  border-color: rgba(255,255,255,0.05); padding: 0.85rem 1.25rem;
+  vertical-align: middle;
+}
+.history-table-wrap tbody tr:hover td { background: rgba(255,255,255,0.02); }
+.pts-positive { color: #34d399; font-weight: 700; }
+.pts-negative { color: #f87171; font-weight: 700; }
+.txn-type-pill {
+  padding: 0.2rem 0.65rem; border-radius: 10px; font-size: 0.72rem; font-weight: 700;
+}
+.txn-earned   { background: rgba(16,185,129,0.12); color: #34d399; }
+.txn-redeemed { background: rgba(239,68,68,0.12);  color: #f87171; }
+.txn-adjusted { background: rgba(245,158,11,0.12); color: #fbbf24; }
+.txn-refunded { background: rgba(59,130,246,0.12); color: #60a5fa; }
+.txn-expired  { background: rgba(148,163,184,0.12); color: #94a3b8; }
+
+/* ── REFERRAL CARD ── */
+.referral-card {
+  background: linear-gradient(135deg, #1e1b4b 0%, #2d1b69 60%, #1e1b4b 100%);
+  border: 1px solid rgba(139,92,246,0.3);
+  border-radius: 20px; padding: 2.5rem;
+  position: relative; overflow: hidden;
+}
+.referral-card::before {
+  content: '';
+  position: absolute; left: -80px; top: -80px;
+  width: 250px; height: 250px;
+  background: radial-gradient(circle, rgba(139,92,246,0.2), transparent 65%);
+}
+.referral-card::after {
+  content: '🎁';
+  position: absolute; right: 2rem; bottom: 1rem;
+  font-size: 6rem; opacity: 0.07; line-height: 1;
+}
+.referral-icon-wrap {
+  width: 64px; height: 64px; border-radius: 18px;
+  background: rgba(139,92,246,0.2); border: 1px solid rgba(139,92,246,0.3);
+  display: flex; align-items: center; justify-content: center; font-size: 1.9rem;
+  margin-bottom: 1rem;
+}
+.referral-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.5rem; }
+.referral-desc { color: #94a3b8; max-width: 480px; margin-bottom: 1.5rem; line-height: 1.6; }
+.referral-code-wrap {
+  display: flex; align-items: center; gap: 0;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(139,92,246,0.3);
+  border-radius: 12px; overflow: hidden; max-width: 340px;
+}
+.referral-code-input {
+  flex: 1; background: transparent; border: none; color: #c4b5fd;
+  font-weight: 700; font-size: 1rem; letter-spacing: 2px;
+  padding: 0.75rem 1rem; outline: none;
+}
+.btn-copy-code {
+  background: rgba(139,92,246,0.3); border: none; color: #c4b5fd;
+  padding: 0.75rem 1rem; font-size: 0.8rem; font-weight: 700;
+  transition: all 0.3s ease; white-space: nowrap;
+}
+.btn-copy-code:hover { background: rgba(139,92,246,0.6); color: #fff; }
+.referral-reward-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(245,158,11,0.15); color: #f59e0b;
+  border: 1px solid rgba(245,158,11,0.3);
+  padding: 0.3rem 0.9rem; border-radius: 20px;
+  font-size: 0.82rem; font-weight: 700; margin-bottom: 1rem;
+}
+.share-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1.25rem; }
+.btn-share {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.5rem 1rem; border-radius: 10px; font-size: 0.82rem; font-weight: 600;
+  border: none; transition: all 0.3s ease; cursor: pointer;
+}
+.btn-share-whatsapp { background: #15803d; color: #fff; }
+.btn-share-whatsapp:hover { background: #166534; transform: translateY(-2px); }
+.btn-share-twitter  { background: #1d4ed8; color: #fff; }
+.btn-share-twitter:hover  { background: #1e40af; transform: translateY(-2px); }
+.btn-share-email    { background: rgba(255,255,255,0.1); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.12); }
+.btn-share-email:hover    { background: rgba(255,255,255,0.17); transform: translateY(-2px); }
+
+/* ── QUICK STATS MINI ── */
+.mini-stat {
+  background: #1e293b; border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px; padding: 1.25rem; text-align: center;
+  transition: all 0.3s ease;
+}
+.mini-stat:hover { border-color: rgba(99,102,241,0.4); transform: translateY(-3px); }
+.mini-stat-icon { font-size: 1.75rem; margin-bottom: 0.4rem; display: block; }
+.mini-stat-val { font-size: 1.5rem; font-weight: 800; color: #818cf8; display: block; }
+.mini-stat-label { font-size: 0.75rem; color: #64748b; margin-top: 0.1rem; }
+
+/* ── ANIMATED COUNTER ── */
+@keyframes countUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.animate-in { animation: countUp 0.7s ease both; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 767px) {
+  .balance-card { padding: 1.5rem; }
+  .bc-points { font-size: 3rem; }
+  .referral-card { padding: 1.5rem; }
+  .bc-divider { display: none !important; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── HERO HEADER ── -->
+<div class="loyalty-hero">
+  <div class="container loyalty-hero-content">
+    <div class="row align-items-center">
+      <div class="col-lg-7">
+        <div class="lh-badge">⭐ Loyalty Rewards Program</div>
+        <h1 class="lh-title">
+          Earn Points.<br>
+          <span style="background:linear-gradient(135deg,#c4b5fd,#818cf8,#f0abfc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+            Unlock Rewards.
+          </span>
+        </h1>
+        <p class="lh-subtitle">Every rupee you spend earns you points. Redeem them for discounts, free shipping and exclusive perks.</p>
+      </div>
+      <div class="col-lg-5 d-none d-lg-flex justify-content-end" style="gap:1rem;">
+        <div class="mini-stat animate-in" style="animation-delay:0.1s">
+          <span class="mini-stat-icon">🛍️</span>
+          <span class="mini-stat-val">{{ wallet.total_earned|default:2847 }}</span>
+          <div class="mini-stat-label">Total Earned</div>
+        </div>
+        <div class="mini-stat animate-in" style="animation-delay:0.2s">
+          <span class="mini-stat-icon">🎁</span>
+          <span class="mini-stat-val">{{ wallet.total_redeemed|default:450 }}</span>
+          <div class="mini-stat-label">Total Redeemed</div>
+        </div>
+        <div class="mini-stat animate-in" style="animation-delay:0.3s">
+          <span class="mini-stat-icon">🏆</span>
+          <span class="mini-stat-val" style="color:#facc15;">{{ current_tier }}</span>
+          <div class="mini-stat-label">Current Tier</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container" style="padding-top:2.5rem;padding-bottom:4rem;">
+
+  <!-- ════════════════════════════════
+       BALANCE CARD
+  ════════════════════════════════ -->
+  <div class="balance-card mb-4 animate-in">
+    <div class="row align-items-center g-3">
+      <div class="col-md-5">
+        <div class="bc-label">Available Points</div>
+        <div class="bc-points" id="pts-counter">{{ wallet.points|default:2397 }}</div>
+        <div class="bc-pts-label">ShopVerse Points</div>
+      </div>
+      <div class="col-1 d-none d-md-flex justify-content-center">
+        <div class="bc-divider"></div>
+      </div>
+      <div class="col-md-6">
+        <div class="row g-3">
+          <div class="col-6 text-center bc-stat-earned">
+            <div class="bc-stat-val">{{ wallet.total_earned|default:2847 }}</div>
+            <div class="bc-stat-label">Total Earned</div>
+          </div>
+          <div class="col-6 text-center bc-stat-redeemed">
+            <div class="bc-stat-val">{{ wallet.total_redeemed|default:450 }}</div>
+            <div class="bc-stat-label">Total Redeemed</div>
+          </div>
+        </div>
+
+        <!-- Progress to next tier -->
+        <div class="tier-progress-wrap">
+          <div class="tier-progress-label">
+            <span>🥇 Gold Tier</span>
+            <span>603 pts to Platinum</span>
+          </div>
+          <div class="tier-progress-bar">
+            <div class="tier-progress-fill" id="tier-bar" style="width: 0%;" data-width="{{ tier_progress|default:80 }}"></div>
+          </div>
+          <div class="tier-progress-hint">
+            <span>{{ wallet.points|default:2397 }}</span> / 3,000 pts needed for
+            <span>💎 Platinum</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       REWARD TIERS
+  ════════════════════════════════ -->
+  <div class="section-label-line mt-5">
+    <div class="section-label-badge">🏅 Reward Tiers</div>
+  </div>
+
+  <div class="row g-3 mb-5">
+    <!-- Bronze -->
+    <div class="col-6 col-lg-3">
+      <div class="tier-card tier-bronze">
+        <div class="tier-icon-wrap">🥉</div>
+        <div class="tier-name">Bronze</div>
+        <div class="tier-points-req">0 – 499 pts</div>
+        <ul class="tier-benefits">
+          <li><i class="bi bi-check-circle-fill"></i>1 point per order</li>
+          <li><i class="bi bi-check-circle-fill"></i>Birthday bonus (5 pts)</li>
+          <li><i class="bi bi-check-circle-fill"></i>Member-only deals</li>
+          <li><i class="bi bi-check-circle-fill"></i>Free standard shipping (₹999+)</li>
+        </ul>
+      </div>
+    </div>
+    <!-- Silver -->
+    <div class="col-6 col-lg-3">
+      <div class="tier-card tier-silver">
+        <div class="tier-icon-wrap">🥈</div>
+        <div class="tier-name">Silver</div>
+        <div class="tier-points-req">500 – 1,499 pts</div>
+        <ul class="tier-benefits">
+          <li><i class="bi bi-check-circle-fill"></i>2× points on purchases</li>
+          <li><i class="bi bi-check-circle-fill"></i>Birthday bonus (15 pts)</li>
+          <li><i class="bi bi-check-circle-fill"></i>Priority support</li>
+          <li><i class="bi bi-check-circle-fill"></i>Free shipping (₹499+)</li>
+          <li><i class="bi bi-check-circle-fill"></i>Early access to sales</li>
+        </ul>
+      </div>
+    </div>
+    <!-- Gold -->
+    <div class="col-6 col-lg-3">
+      <div class="tier-card tier-gold active-tier">
+        <div class="tier-icon-wrap">🥇</div>
+        <div class="tier-name">Gold</div>
+        <div class="tier-points-req">1,500 – 2,999 pts</div>
+        <ul class="tier-benefits">
+          <li><i class="bi bi-check-circle-fill"></i>3× points on purchases</li>
+          <li><i class="bi bi-check-circle-fill"></i>Birthday bonus (30 pts)</li>
+          <li><i class="bi bi-check-circle-fill"></i>Dedicated account manager</li>
+          <li><i class="bi bi-check-circle-fill"></i>Always free shipping</li>
+          <li><i class="bi bi-check-circle-fill"></i>Exclusive Gold rewards</li>
+          <li><i class="bi bi-check-circle-fill"></i>10% off every order</li>
+        </ul>
+      </div>
+    </div>
+    <!-- Platinum -->
+    <div class="col-6 col-lg-3">
+      <div class="tier-card tier-platinum">
+        <div class="tier-icon-wrap">💎</div>
+        <div class="tier-name">Platinum</div>
+        <div class="tier-points-req">3,000+ pts</div>
+        <ul class="tier-benefits">
+          <li><i class="bi bi-check-circle-fill"></i>5× points on purchases</li>
+          <li><i class="bi bi-check-circle-fill"></i>Birthday bonus (100 pts)</li>
+          <li><i class="bi bi-check-circle-fill"></i>VIP concierge support</li>
+          <li><i class="bi bi-check-circle-fill"></i>Express free shipping</li>
+          <li><i class="bi bi-check-circle-fill"></i>Platinum-only drops</li>
+          <li><i class="bi bi-check-circle-fill"></i>20% off every order</li>
+          <li><i class="bi bi-check-circle-fill"></i>Free returns always</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       EARN POINTS
+  ════════════════════════════════ -->
+  <div class="section-label-line mt-5">
+    <div class="section-label-badge">💰 How to Earn Points</div>
+  </div>
+
+  <div class="row g-3 mb-5">
+    <div class="col-sm-6 col-lg-3">
+      <div class="earn-card">
+        <div class="earn-icon-wrap earn-icon-purple">🛒</div>
+        <div>
+          <div class="earn-title">Make a Purchase</div>
+          <div class="earn-desc">Earn 1 point for every order you place on ShopVerse, regardless of order value.</div>
+          <div class="earn-pts-pill"><i class="bi bi-star-fill" style="font-size:0.6rem"></i> 1 pt / order</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="earn-card">
+        <div class="earn-icon-wrap earn-icon-green">👥</div>
+        <div>
+          <div class="earn-title">Refer a Friend</div>
+          <div class="earn-desc">Share your referral code. When a friend signs up and orders, you both earn bonus points.</div>
+          <div class="earn-pts-pill"><i class="bi bi-star-fill" style="font-size:0.6rem"></i> 50 pts / referral</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="earn-card">
+        <div class="earn-icon-wrap earn-icon-blue">⭐</div>
+        <div>
+          <div class="earn-title">Write a Review</div>
+          <div class="earn-desc">Share your honest product review and earn bonus points to boost your balance.</div>
+          <div class="earn-pts-pill"><i class="bi bi-star-fill" style="font-size:0.6rem"></i> 10 pts / review</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="earn-card">
+        <div class="earn-icon-wrap earn-icon-pink">🎂</div>
+        <div>
+          <div class="earn-title">Birthday Bonus</div>
+          <div class="earn-desc">Celebrate your birthday with a special points gift based on your current loyalty tier.</div>
+          <div class="earn-pts-pill"><i class="bi bi-star-fill" style="font-size:0.6rem"></i> Up to 100 pts</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       REDEEM REWARDS
+  ════════════════════════════════ -->
+  <div class="section-label-line mt-5">
+    <div class="section-label-badge">🎁 Redeem Rewards</div>
+  </div>
+
+  <div class="row g-3 mb-5">
+    {% with user_pts=wallet.points|default:2397 %}
+    <!-- ₹50 Off -->
+    <div class="col-6 col-md-4 col-lg-3">
+      <div class="redeem-card">
+        <div class="redeem-img-wrap">
+          <span class="redeem-icon">🏷️</span>
+          <div class="redeem-pts-badge">50 pts</div>
+        </div>
+        <div class="redeem-body">
+          <div class="redeem-title">₹50 Off Next Order</div>
+          <div class="redeem-desc">Get a ₹50 instant discount on your next purchase — no minimum order.</div>
+          <button class="btn-redeem {% if user_pts < 50 %}disabled{% endif %}"
+            {% if user_pts < 50 %}disabled{% endif %}
+            onclick="showRedeemModal('₹50 Off Next Order', 50)">
+            <i class="bi bi-gift me-1"></i>Redeem
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Free Shipping -->
+    <div class="col-6 col-md-4 col-lg-3">
+      <div class="redeem-card">
+        <div class="redeem-img-wrap">
+          <span class="redeem-icon">🚚</span>
+          <div class="redeem-pts-badge">75 pts</div>
+        </div>
+        <div class="redeem-body">
+          <div class="redeem-title">Free Shipping Pass</div>
+          <div class="redeem-desc">Enjoy free shipping on your next 3 orders, valid for 30 days.</div>
+          <button class="btn-redeem {% if user_pts < 75 %}disabled{% endif %}"
+            {% if user_pts < 75 %}disabled{% endif %}
+            onclick="showRedeemModal('Free Shipping Pass', 75)">
+            <i class="bi bi-gift me-1"></i>Redeem
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- ₹200 Off -->
+    <div class="col-6 col-md-4 col-lg-3">
+      <div class="redeem-card">
+        <div class="redeem-img-wrap">
+          <span class="redeem-icon">💸</span>
+          <div class="redeem-pts-badge">200 pts</div>
+        </div>
+        <div class="redeem-body">
+          <div class="redeem-title">₹200 Off ₹999+</div>
+          <div class="redeem-desc">Get ₹200 off any order above ₹999. The bigger you buy, the more you save.</div>
+          <button class="btn-redeem {% if user_pts < 200 %}disabled{% endif %}"
+            {% if user_pts < 200 %}disabled{% endif %}
+            onclick="showRedeemModal('₹200 Off ₹999+', 200)">
+            <i class="bi bi-gift me-1"></i>Redeem
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Exclusive Product -->
+    <div class="col-6 col-md-4 col-lg-3">
+      <div class="redeem-card">
+        <div class="redeem-img-wrap">
+          <span class="redeem-icon">📦</span>
+          <div class="redeem-pts-badge">500 pts</div>
+        </div>
+        <div class="redeem-body">
+          <div class="redeem-title">Mystery Gift Box</div>
+          <div class="redeem-desc">A curated surprise gift box with premium ShopVerse products. Limited stock!</div>
+          <button class="btn-redeem {% if user_pts < 500 %}disabled{% endif %}"
+            {% if user_pts < 500 %}disabled{% endif %}
+            onclick="showRedeemModal('Mystery Gift Box', 500)">
+            <i class="bi bi-gift me-1"></i>Redeem
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- 15% Off -->
+    <div class="col-6 col-md-4 col-lg-3">
+      <div class="redeem-card">
+        <div class="redeem-img-wrap">
+          <span class="redeem-icon">🔥</span>
+          <div class="redeem-pts-badge">350 pts</div>
+        </div>
+        <div class="redeem-body">
+          <div class="redeem-title">15% Flat Discount</div>
+          <div class="redeem-desc">15% off your entire cart — a Gold and above exclusive reward.</div>
+          <button class="btn-redeem {% if user_pts < 350 %}disabled{% endif %}"
+            {% if user_pts < 350 %}disabled{% endif %}
+            onclick="showRedeemModal('15% Flat Discount', 350)">
+            <i class="bi bi-gift me-1"></i>Redeem
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Early Access -->
+    <div class="col-6 col-md-4 col-lg-3">
+      <div class="redeem-card">
+        <div class="redeem-img-wrap">
+          <span class="redeem-icon">⚡</span>
+          <div class="redeem-pts-badge">150 pts</div>
+        </div>
+        <div class="redeem-body">
+          <div class="redeem-title">Early Sale Access</div>
+          <div class="redeem-desc">Get 24-hour early access to our next flash sale before the general public.</div>
+          <button class="btn-redeem {% if user_pts < 150 %}disabled{% endif %}"
+            {% if user_pts < 150 %}disabled{% endif %}
+            onclick="showRedeemModal('Early Sale Access', 150)">
+            <i class="bi bi-gift me-1"></i>Redeem
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- ₹500 Off -->
+    <div class="col-6 col-md-4 col-lg-3">
+      <div class="redeem-card">
+        <div class="redeem-img-wrap">
+          <span class="redeem-icon">💎</span>
+          <div class="redeem-pts-badge">800 pts</div>
+        </div>
+        <div class="redeem-body">
+          <div class="redeem-title">₹500 Off ₹2,499+</div>
+          <div class="redeem-desc">Platinum exclusive: ₹500 instant cashback on orders above ₹2,499.</div>
+          <button class="btn-redeem {% if user_pts < 800 %}disabled{% endif %}"
+            {% if user_pts < 800 %}disabled{% endif %}
+            onclick="showRedeemModal('₹500 Off ₹2499+', 800)">
+            <i class="bi bi-gift me-1"></i>Redeem
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Double Points -->
+    <div class="col-6 col-md-4 col-lg-3">
+      <div class="redeem-card">
+        <div class="redeem-img-wrap">
+          <span class="redeem-icon">✨</span>
+          <div class="redeem-pts-badge">100 pts</div>
+        </div>
+        <div class="redeem-body">
+          <div class="redeem-title">Double Points Week</div>
+          <div class="redeem-desc">Activate 2× points earning for every purchase made in the next 7 days.</div>
+          <button class="btn-redeem {% if user_pts < 100 %}disabled{% endif %}"
+            {% if user_pts < 100 %}disabled{% endif %}
+            onclick="showRedeemModal('Double Points Week', 100)">
+            <i class="bi bi-gift me-1"></i>Redeem
+          </button>
+        </div>
+      </div>
+    </div>
+    {% endwith %}
+  </div>
+
+  <!-- ════════════════════════════════
+       POINTS HISTORY TABLE
+  ════════════════════════════════ -->
+  <div class="section-label-line mt-5">
+    <div class="section-label-badge">📋 Points History</div>
+  </div>
+
+  <div class="history-table-wrap mb-5">
+    <table class="table table-borderless mb-0">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Activity</th>
+          <th>Order / Ref</th>
+          <th>Points</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if loyalty_transactions %}
+          {% for txn in loyalty_transactions %}
+          <tr>
+            <td>
+              <span style="color:#64748b;font-size:0.82rem;">{{ txn.created_at|date:"d M Y" }}</span>
+            </td>
+            <td>{{ txn.description }}</td>
+            <td>
+              {% if txn.order %}
+                <a href="{% url 'order_detail' txn.order.order_id %}" style="color:#818cf8;font-size:0.82rem;">#{{ txn.order.order_id }}</a>
+              {% else %}
+                <span style="color:#475569;">—</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="{% if txn.points > 0 %}pts-positive{% else %}pts-negative{% endif %}">
+                {% if txn.points > 0 %}+{% endif %}{{ txn.points }} pts
+              </span>
+            </td>
+            <td>
+              <span class="txn-type-pill txn-{{ txn.transaction_type|lower }}">{{ txn.transaction_type }}</span>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <!-- Sample Data (shown when no real transactions) -->
+          <tr>
+            <td><span style="color:#64748b;font-size:0.82rem;">12 Jun 2026</span></td>
+            <td>1 point earned on Order SV4AB12CD</td>
+            <td><span style="color:#818cf8;font-size:0.82rem;">#SV4AB12CD</span></td>
+            <td><span class="pts-positive">+1 pts</span></td>
+            <td><span class="txn-type-pill txn-earned">Earned</span></td>
+          </tr>
+          <tr>
+            <td><span style="color:#64748b;font-size:0.82rem;">10 Jun 2026</span></td>
+            <td>Redeemed on Order SV9XY34EF</td>
+            <td><span style="color:#818cf8;font-size:0.82rem;">#SV9XY34EF</span></td>
+            <td><span class="pts-negative">-50 pts</span></td>
+            <td><span class="txn-type-pill txn-redeemed">Redeemed</span></td>
+          </tr>
+          <tr>
+            <td><span style="color:#64748b;font-size:0.82rem;">8 Jun 2026</span></td>
+            <td>Referral bonus — Priya K joined</td>
+            <td><span style="color:#475569;">—</span></td>
+            <td><span class="pts-positive">+50 pts</span></td>
+            <td><span class="txn-type-pill txn-earned">Earned</span></td>
+          </tr>
+          <tr>
+            <td><span style="color:#64748b;font-size:0.82rem;">5 Jun 2026</span></td>
+            <td>Birthday bonus reward</td>
+            <td><span style="color:#475569;">—</span></td>
+            <td><span class="pts-positive">+30 pts</span></td>
+            <td><span class="txn-type-pill txn-earned">Earned</span></td>
+          </tr>
+          <tr>
+            <td><span style="color:#64748b;font-size:0.82rem;">1 Jun 2026</span></td>
+            <td>Product review — Wireless Earbuds</td>
+            <td><span style="color:#475569;">—</span></td>
+            <td><span class="pts-positive">+10 pts</span></td>
+            <td><span class="txn-type-pill txn-earned">Earned</span></td>
+          </tr>
+          <tr>
+            <td><span style="color:#64748b;font-size:0.82rem;">28 May 2026</span></td>
+            <td>Refund adjustment — Order SV7PQ88GH</td>
+            <td><span style="color:#818cf8;font-size:0.82rem;">#SV7PQ88GH</span></td>
+            <td><span class="pts-positive">+1 pts</span></td>
+            <td><span class="txn-type-pill txn-refunded">Refunded</span></td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ════════════════════════════════
+       REFERRAL PROGRAM
+  ════════════════════════════════ -->
+  <div class="section-label-line mt-5">
+    <div class="section-label-badge">👥 Referral Program</div>
+  </div>
+
+  <div class="referral-card">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-7">
+        <div class="referral-icon-wrap">👥</div>
+        <div class="referral-reward-pill">
+          <i class="bi bi-star-fill"></i> 50 pts for you + 25 pts for your friend
+        </div>
+        <h2 class="referral-title">Invite Friends &amp; Earn Together</h2>
+        <p class="referral-desc">Share your unique referral code with friends. When they sign up and complete their first order, you both get rewarded instantly — no limits on how many friends you can refer!</p>
+
+        <div class="referral-code-wrap mb-3">
+          <input type="text" class="referral-code-input" id="refCode"
+            value="{{ referral_code|default:'AKHIL-SV2026' }}" readonly>
+          <button class="btn-copy-code" onclick="copyRefCode()" id="copyBtn">
+            <i class="bi bi-clipboard me-1"></i>Copy
+          </button>
+        </div>
+
+        <div class="share-btns">
+          <button class="btn-share btn-share-whatsapp" id="btn-whatsapp">
+            <i class="bi bi-whatsapp"></i> WhatsApp
+          </button>
+          <button class="btn-share btn-share-twitter" id="btn-twitter">
+            <i class="bi bi-twitter-x"></i> Twitter
+          </button>
+          <button class="btn-share btn-share-email" id="btn-email">
+            <i class="bi bi-envelope"></i> Email
+          </button>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:1.5rem;">
+          <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#64748b;margin-bottom:1rem;">How It Works</div>
+          <div style="display:flex;flex-direction:column;gap:1rem;">
+            <div style="display:flex;align-items:flex-start;gap:0.75rem;">
+              <div style="width:32px;height:32px;border-radius:50%;background:rgba(99,102,241,0.2);border:1px solid rgba(99,102,241,0.3);display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;color:#818cf8;flex-shrink:0;">1</div>
+              <div>
+                <div style="font-weight:600;font-size:0.9rem;">Share your code</div>
+                <div style="font-size:0.8rem;color:#64748b;margin-top:2px;">Send your unique referral code to friends via any channel.</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:0.75rem;">
+              <div style="width:32px;height:32px;border-radius:50%;background:rgba(99,102,241,0.2);border:1px solid rgba(99,102,241,0.3);display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;color:#818cf8;flex-shrink:0;">2</div>
+              <div>
+                <div style="font-weight:600;font-size:0.9rem;">Friend signs up & orders</div>
+                <div style="font-size:0.8rem;color:#64748b;margin-top:2px;">They register with your code and place their first order.</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:0.75rem;">
+              <div style="width:32px;height:32px;border-radius:50%;background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.3);display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;color:#34d399;flex-shrink:0;">✓</div>
+              <div>
+                <div style="font-weight:600;font-size:0.9rem;">Both earn rewards</div>
+                <div style="font-size:0.8rem;color:#64748b;margin-top:2px;">You get 50 pts, they get 25 pts — automatically credited.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════
+     REDEEM MODAL
+════════════════════════════════ -->
+<div class="modal fade" id="redeemModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background:#1e293b;border:1px solid rgba(255,255,255,0.1);border-radius:18px;">
+      <div class="modal-header" style="border-color:rgba(255,255,255,0.07);padding:1.5rem;">
+        <h5 class="modal-title" id="redeemModalTitle" style="font-weight:800;">Redeem Reward</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:1.5rem;">
+        <div class="text-center mb-3">
+          <div style="font-size:3.5rem;margin-bottom:0.5rem;">🎁</div>
+          <p id="redeemModalDesc" style="color:#94a3b8;"></p>
+        </div>
+        <div style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);border-radius:12px;padding:1rem;text-align:center;margin-bottom:1rem;">
+          <div style="font-size:0.78rem;color:#818cf8;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Points to Deduct</div>
+          <div id="redeemPts" style="font-size:2rem;font-weight:900;color:#c4b5fd;"></div>
+          <div style="font-size:0.78rem;color:#64748b;">Your balance after: <span id="balAfter" style="color:#34d399;font-weight:700;"></span> pts</div>
+        </div>
+        <p style="font-size:0.82rem;color:#64748b;text-align:center;">A coupon code will be generated and applied to your next order. Valid for 7 days.</p>
+      </div>
+      <div class="modal-footer" style="border-color:rgba(255,255,255,0.07);padding:1rem 1.5rem;">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background:#334155;border:none;border-radius:10px;">Cancel</button>
+        <button type="button" class="btn-redeem" style="width:auto;padding:0.6rem 1.75rem;" onclick="confirmRedeem()">
+          <i class="bi bi-gift me-1"></i>Confirm Redeem
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── Referral code (safe JS injection)
+const REFERRAL_CODE = "{{ referral_code }}";
+
+// ── Share buttons
+document.addEventListener('DOMContentLoaded', () => {
+  const waBtn = document.getElementById('btn-whatsapp');
+  const twBtn = document.getElementById('btn-twitter');
+  const emBtn = document.getElementById('btn-email');
+
+  if (waBtn) waBtn.onclick = () =>
+    window.open('https://wa.me/?text=Join%20ShopVerse%20with%20my%20code%20' + REFERRAL_CODE + '%20and%20get%2025%20bonus%20points!%20https://shopverse.in', '_blank');
+
+  if (twBtn) twBtn.onclick = () =>
+    window.open('https://twitter.com/intent/tweet?text=Join%20ShopVerse%20with%20code%20' + REFERRAL_CODE + '%20and%20earn%2025%20bonus%20points!', '_blank');
+
+  if (emBtn) emBtn.onclick = () =>
+    window.location = 'mailto:?subject=Join ShopVerse!&body=Use my code ' + REFERRAL_CODE + ' to sign up on ShopVerse and get 25 bonus points!';
+});
+
+// ── Animate progress bar on load
+window.addEventListener('DOMContentLoaded', () => {
+  const bar = document.getElementById('tier-bar');
+  if (bar) {
+    const target = bar.getAttribute('data-width') || 80;
+    setTimeout(() => { bar.style.width = target + '%'; }, 400);
+  }
+});
+
+// ── Redeem modal
+let currentReward = null;
+const userPoints = {{ wallet.points }};
+
+function showRedeemModal(name, pts) {
+  currentReward = { name, pts };
+  document.getElementById('redeemModalTitle').textContent = 'Redeem: ' + name;
+  document.getElementById('redeemModalDesc').textContent =
+    'You are about to redeem "' + name + '" for ' + pts + ' points.';
+  document.getElementById('redeemPts').textContent = pts + ' pts';
+  document.getElementById('balAfter').textContent = (userPoints - pts);
+  const modal = new bootstrap.Modal(document.getElementById('redeemModal'));
+  modal.show();
+}
+
+function confirmRedeem() {
+  const modal = bootstrap.Modal.getInstance(document.getElementById('redeemModal'));
+  modal.hide();
+  const toastHtml = `
+    <div class="toast align-items-center show border-0 toast-success" role="alert" style="margin-top:70px;z-index:9999;">
+      <div class="d-flex">
+        <div class="toast-body">
+          <i class="bi bi-check-circle-fill me-2 text-success"></i>
+          Reward redeemed! Your coupon code will appear in your profile shortly.
+        </div>
+        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>`;
+  let container = document.querySelector('.toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'toast-container position-fixed top-0 end-0 p-3';
+    document.body.appendChild(container);
+  }
+  container.innerHTML = toastHtml;
+  setTimeout(() => { container.innerHTML = ''; }, 4000);
+}
+
+// ── Copy referral code
+function copyRefCode() {
+  const input = document.getElementById('refCode');
+  input.select();
+  input.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(input.value).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.innerHTML = '<i class="bi bi-check2 me-1"></i>Copied!';
+    btn.style.background = 'rgba(16,185,129,0.4)';
+    btn.style.color = '#34d399';
+    setTimeout(() => {
+      btn.innerHTML = '<i class="bi bi-clipboard me-1"></i>Copy';
+      btn.style.background = '';
+      btn.style.color = '';
+    }, 2000);
+  });
+}
+</script>
+{% endblock %}

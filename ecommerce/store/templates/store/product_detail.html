@@ -1,0 +1,125 @@
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} — ShopVerse{% endblock %}
+
+{% block content %}
+<div class="page-header-sm">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb breadcrumb-custom mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Products</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'product_list' %}?category={{ product.category.slug }}">{{ product.category.name }}</a></li>
+        <li class="breadcrumb-item active">{{ product.name|truncatewords:4 }}</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<div class="container section-padding">
+  <div class="row g-5">
+    <!-- Product Image -->
+    <div class="col-lg-5">
+      <div class="product-detail-img-wrap">
+        <img src="{{ product.image_url }}" alt="{{ product.name }}" class="product-detail-img"/>
+        {% if not product.in_stock %}
+        <div class="detail-out-badge">Out of Stock</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Product Info -->
+    <div class="col-lg-7">
+      <a href="{% url 'product_list' %}?category={{ product.category.slug }}" class="product-category mb-2 d-inline-block">{{ product.category.name }}</a>
+      <h1 class="detail-product-name">{{ product.name }}</h1>
+
+      <div class="d-flex align-items-center gap-3 mb-4">
+        <span class="detail-price">₹{{ product.price }}</span>
+        {% if product.in_stock %}
+        <span class="stock-badge-in"><i class="bi bi-check-circle-fill me-1"></i>In Stock ({{ product.stock }})</span>
+        {% else %}
+        <span class="stock-badge-out"><i class="bi bi-x-circle-fill me-1"></i>Out of Stock</span>
+        {% endif %}
+      </div>
+
+      <div class="detail-desc mb-4">
+        <h6 class="desc-heading">Description</h6>
+        <p>{{ product.description }}</p>
+      </div>
+
+      <div class="detail-meta mb-4">
+        <div class="meta-item"><span class="meta-label">Category:</span> <a href="{% url 'product_list' %}?category={{ product.category.slug }}">{{ product.category.name }}</a></div>
+        <div class="meta-item"><span class="meta-label">SKU:</span> PROD{{ product.pk|stringformat:"05d" }}</div>
+      </div>
+
+      {% if product.in_stock %}
+      <div class="detail-actions">
+        {% if user.is_authenticated %}
+        <a href="{% url 'add_to_cart' product.pk %}" class="btn btn-detail-cart">
+          <i class="bi bi-cart-plus me-2"></i>
+          {% if in_cart %}Update Cart{% else %}Add to Cart{% endif %}
+        </a>
+        <a href="{% url 'checkout' %}" class="btn btn-detail-buy" id="buyNowBtn" onclick="addAndBuy(event, '{% url 'add_to_cart' product.pk %}', '{% url 'checkout' %}')">
+          <i class="bi bi-zap-fill me-2"></i>Buy Now
+        </a>
+        {% else %}
+        <a href="{% url 'login' %}?next={% url 'product_detail' product.pk %}" class="btn btn-detail-cart">
+          <i class="bi bi-cart-plus me-2"></i>Login to Add to Cart
+        </a>
+        {% endif %}
+      </div>
+      {% else %}
+      <button class="btn btn-detail-cart disabled" disabled>Out of Stock</button>
+      {% endif %}
+
+      <!-- Delivery Info -->
+      <div class="delivery-info mt-4">
+        <div class="delivery-item"><i class="bi bi-truck text-success"></i><span>Free delivery on orders above ₹999</span></div>
+        <div class="delivery-item"><i class="bi bi-shield-check text-primary"></i><span>Secure payment & easy returns</span></div>
+        <div class="delivery-item"><i class="bi bi-arrow-counterclockwise text-warning"></i><span>30-day return policy</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related Products -->
+  {% if related_products %}
+  <div class="mt-6">
+    <div class="section-header mb-4">
+      <span class="section-badge">More Like This</span>
+      <h3 class="section-title">Related Products</h3>
+    </div>
+    <div class="row g-4">
+      {% for rp in related_products %}
+      <div class="col-6 col-md-3">
+        <div class="product-card">
+          <a href="{% url 'product_detail' rp.pk %}" class="product-img-link">
+            <img src="{{ rp.image_url }}" alt="{{ rp.name }}" class="product-img" loading="lazy"/>
+            <div class="product-overlay"><i class="bi bi-eye-fill"></i> View</div>
+          </a>
+          <div class="product-body">
+            <h6 class="product-name"><a href="{% url 'product_detail' rp.pk %}">{{ rp.name }}</a></h6>
+            <div class="product-footer">
+              <span class="product-price">₹{{ rp.price }}</span>
+              {% if rp.in_stock %}
+              <a href="{% url 'add_to_cart' rp.pk %}" class="btn btn-add-cart"><i class="bi bi-cart-plus"></i></a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function addAndBuy(e, addUrl, checkoutUrl) {
+  e.preventDefault();
+  fetch(addUrl).then(() => { window.location.href = checkoutUrl; });
+}
+</script>
+{% endblock %}

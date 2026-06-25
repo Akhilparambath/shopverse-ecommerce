@@ -1,0 +1,68 @@
+{% extends 'store/base.html' %}
+{% block title %}Login — ShopVerse{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <a href="{% url 'home' %}">🛍️ <span class="brand-name">Shop<span class="brand-accent">Verse</span></span></a>
+    </div>
+    <h2 class="auth-title">Welcome back!</h2>
+    <p class="auth-subtitle">Sign in to your account to continue</p>
+
+    <form method="post" class="auth-form" id="loginForm">
+      {% csrf_token %}
+      <div class="form-group mb-3">
+        <label class="form-label"><i class="bi bi-envelope me-1"></i>Email Address</label>
+        <input type="email" name="email" id="id_email" class="form-control" placeholder="you@example.com" required autofocus/>
+      </div>
+      <div class="form-group mb-3">
+        <label class="form-label d-flex justify-content-between">
+          <span><i class="bi bi-lock me-1"></i>Password</span>
+          <a href="#" class="forgot-link">Forgot password?</a>
+        </label>
+        <div class="input-group">
+          <input type="password" name="password" id="id_password" class="form-control" placeholder="••••••••" required/>
+          <button class="btn btn-toggle-pass" type="button" onclick="togglePass()"><i class="bi bi-eye" id="eyeIcon"></i></button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-auth w-100 mt-2" id="loginBtn">
+        <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+      </button>
+    </form>
+
+    <!-- Demo Credentials -->
+    <div class="demo-creds mt-3">
+      <p class="text-muted text-center small mb-2">Try the admin panel:</p>
+      <div class="demo-cred-box">
+        <div><strong>Email:</strong> admin@shop.com</div>
+        <div><strong>Password:</strong> admin123</div>
+        <a href="{% url 'admin_login' %}" class="btn btn-sm btn-outline-warning mt-2 w-100">Admin Login →</a>
+      </div>
+    </div>
+
+    <div class="auth-divider"><span>or</span></div>
+
+    <p class="text-center auth-footer-text">
+      Don't have an account? <a href="{% url 'register' %}" class="auth-link">Create one free</a>
+    </p>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePass() {
+  const inp = document.getElementById('id_password');
+  const ico = document.getElementById('eyeIcon');
+  if (inp.type === 'password') { inp.type = 'text'; ico.className = 'bi bi-eye-slash'; }
+  else { inp.type = 'password'; ico.className = 'bi bi-eye'; }
+}
+document.getElementById('loginForm').addEventListener('submit', function() {
+  const btn = document.getElementById('loginBtn');
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Signing In…';
+  btn.disabled = true;
+});
+</script>
+{% endblock %}

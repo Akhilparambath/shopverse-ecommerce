@@ -1,0 +1,24 @@
+{% extends 'adminpanel/base.html' %}
+{% block title %}Confirm Delete — Admin{% endblock %}
+{% block page_title %}Confirm Delete{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+  <div class="col-md-5">
+    <div class="admin-card text-center">
+      <div class="admin-card-body py-5">
+        <div style="font-size:4rem" class="mb-3">⚠️</div>
+        <h5>Delete {{ type }}</h5>
+        <p class="text-muted">Are you sure you want to delete <strong>{{ obj }}</strong>? This action cannot be undone.</p>
+        <div class="d-flex gap-3 justify-content-center mt-4">
+          <a href="javascript:history.back()" class="btn btn-outline-secondary">Cancel</a>
+          <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger"><i class="bi bi-trash3 me-2"></i>Delete</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

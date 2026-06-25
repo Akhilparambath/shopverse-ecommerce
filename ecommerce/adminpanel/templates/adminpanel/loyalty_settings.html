@@ -1,0 +1,70 @@
+{% extends 'adminpanel/base.html' %}
+{% block title %}Loyalty Settings — Admin{% endblock %}
+{% block page_title %}Loyalty Settings{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4">
+  <a href="{% url 'admin_dashboard' %}" class="btn btn-icon-admin"><i class="bi bi-arrow-left"></i></a>
+  <h4 class="admin-page-heading mb-0">Loyalty Program Settings</h4>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <form method="post" id="loyaltySettingsForm">
+      {% csrf_token %}
+      <div class="admin-card mb-4">
+        <div class="admin-card-header"><i class="bi bi-gear me-2"></i>Configuration</div>
+        <div class="admin-card-body">
+          <div class="mb-3">
+            <label class="form-label">Points Per Currency *</label>
+            {{ form.points_per_currency }}
+            <div class="form-text">Amount to spend to earn 1 point (e.g., 200 ₹ = 1 point)</div>
+            {% if form.points_per_currency.errors %}<div class="invalid-feedback d-block">{{ form.points_per_currency.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Minimum Redemption Points *</label>
+            {{ form.min_redemption_points }}
+            <div class="form-text">Minimum points required before a user can redeem them</div>
+            {% if form.min_redemption_points.errors %}<div class="invalid-feedback d-block">{{ form.min_redemption_points.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Max Redemption Percent (%) *</label>
+              {{ form.max_redemption_percent }}
+              <div class="form-text">Maximum percentage of an order total that can be discounted</div>
+              {% if form.max_redemption_percent.errors %}<div class="invalid-feedback d-block">{{ form.max_redemption_percent.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Point Value In Currency (₹) *</label>
+              {{ form.point_value_in_currency }}
+              <div class="form-text">Currency value of 1 point when redeeming</div>
+              {% if form.point_value_in_currency.errors %}<div class="invalid-feedback d-block">{{ form.point_value_in_currency.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-admin-primary">
+          <i class="bi bi-check-lg me-2"></i>Save Settings
+        </button>
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="admin-card">
+      <div class="admin-card-header"><i class="bi bi-lightbulb me-2"></i>How it works</div>
+      <div class="admin-card-body">
+        <ul class="tips-list">
+          <li><strong>Points Per Currency:</strong> Determines how hard it is to earn points. A higher value means fewer points earned.</li>
+          <li><strong>Min Redemption Points:</strong> Ensures users save up before getting a discount.</li>
+          <li><strong>Max Redemption Percent:</strong> Protects your margins by capping the discount on a single order.</li>
+          <li><strong>Point Value:</strong> The direct conversion rate from points back to money during checkout.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

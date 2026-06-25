@@ -1,0 +1,43 @@
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block title %}Complete Payment — ShopVerse{% endblock %}
+
+{% block content %}
+<div class="container section-padding text-center">
+  <h2>Processing Payment...</h2>
+  <p>Please do not refresh the page.</p>
+
+  <form action="{{ callback_url }}" method="POST" id="razorpay-form">
+    {% csrf_token %}
+    <script
+      src="https://checkout.razorpay.com/v1/checkout.js"
+      data-key="{{ razorpay_key_id }}"
+      data-amount="{{ amount }}"
+      data-currency="{{ currency }}"
+      data-order_id="{{ razorpay_order_id }}"
+      data-buttontext="Pay Now"
+      data-name="ShopVerse"
+      data-description="Order Payment"
+      data-image="https://ui-avatars.com/api/?name=ShopVerse&background=random"
+      data-prefill.name="{{ order.shipping_name }}"
+      data-prefill.contact="{{ order.shipping_phone }}"
+      data-theme.color="#0d6efd">
+    </script>
+    <input type="hidden" custom="Hidden Element" name="hidden">
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Auto-click the Razorpay button to open it immediately
+  window.onload = function() {
+    var rzpBtn = document.querySelector('.razorpay-payment-button');
+    if(rzpBtn) {
+        rzpBtn.style.display = 'none'; // hide the default button
+        rzpBtn.click();
+    }
+  };
+</script>
+{% endblock %}

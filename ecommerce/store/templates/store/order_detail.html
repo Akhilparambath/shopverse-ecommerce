@@ -1,0 +1,111 @@
+{% extends 'store/base.html' %}
+{% block title %}Order #{{ order.order_id }} — ShopVerse{% endblock %}
+
+{% block content %}
+<div class="page-header-sm">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb breadcrumb-custom mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'order_history' %}">My Orders</a></li>
+        <li class="breadcrumb-item active">#{{ order.order_id }}</li>
+      </ol>
+    </nav>
+    <div class="d-flex align-items-center justify-content-between mt-2 flex-wrap gap-2">
+      <h1 class="page-title mb-0">Order #{{ order.order_id }}</h1>
+      <span class="badge badge-status-{{ order.status|lower }} fs-6">{{ order.status }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="container section-padding">
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <!-- Order Items -->
+      <div class="order-detail-card mb-4">
+        <div class="order-detail-header"><i class="bi bi-box-seam me-2"></i>Order Items</div>
+        <div class="order-detail-body">
+          {% for item in order.items.all %}
+          <div class="detail-order-row">
+            <div class="detail-order-info">
+              {% if item.product %}
+              <a href="{% url 'product_detail' item.product.pk %}">
+                <img src="{{ item.product.image_url }}" alt="{{ item.product_name }}" class="detail-item-img"/>
+              </a>
+              {% else %}
+              <img src="https://picsum.photos/seed/{{ item.pk }}/80/80" alt="{{ item.product_name }}" class="detail-item-img"/>
+              {% endif %}
+              <div>
+                <div class="detail-item-name">{{ item.product_name }}</div>
+                <small class="text-muted">₹{{ item.price }} per unit</small>
+              </div>
+            </div>
+            <div class="detail-item-qty">× {{ item.quantity }}</div>
+            <div class="detail-item-total">₹{{ item.subtotal }}</div>
+          </div>
+          {% endfor %}
+          <div class="summary-divider mt-3"></div>
+          {% if order.discount_amount > 0 %}
+          <div class="summary-row text-success fw-semibold"><span>&#11088; Points Discount</span><span>- &#8377;{{ order.discount_amount }}</span></div>
+          {% endif %}
+          <div class="summary-total mt-2"><span>Total Amount</span><span>&#8377;{{ order.total_amount }}</span></div>
+        </div>
+      </div>
+
+      <!-- Status Tracker -->
+      <div class="order-detail-card">
+        <div class="order-detail-header"><i class="bi bi-geo-alt me-2"></i>Order Timeline</div>
+        <div class="order-detail-body">
+          <div class="timeline">
+            {% for step in tracking_steps %}
+            {% with order.status as current %}
+            <div class="timeline-item {% if step == 'Pending' %}completed{% elif step == 'Processing' and current != 'Pending' %}completed{% elif step == 'Shipped' and current == 'Shipped' or current == 'Delivered' %}completed{% elif step == 'Delivered' and current == 'Delivered' %}completed{% else %}pending{% endif %}">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <div class="timeline-title">{{ step }}</div>
+                {% if step == order.status %}<div class="timeline-desc text-primary">Current status</div>{% endif %}
+              </div>
+            </div>
+            {% endwith %}
+            {% endfor %}
+            {% if order.status == 'Cancelled' %}
+            <div class="timeline-item danger">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content"><div class="timeline-title text-danger">Cancelled</div></div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="col-lg-4">
+      <!-- Order Info -->
+      <div class="order-detail-card mb-3">
+        <div class="order-detail-header"><i class="bi bi-info-circle me-2"></i>Order Info</div>
+        <div class="order-detail-body">
+          <div class="info-row"><span class="info-label">Order ID</span><span class="text-primary fw-bold">#{{ order.order_id }}</span></div>
+          <div class="info-row"><span class="info-label">Date</span><span>{{ order.created_at|date:"d M Y" }}</span></div>
+          <div class="info-row"><span class="info-label">Status</span><span class="badge badge-status-{{ order.status|lower }}">{{ order.status }}</span></div>
+          <div class="info-row"><span class="info-label">Payment</span><span class="badge badge-payment-{{ order.payment_status|lower }}">{{ order.payment_status }}</span></div>
+          <div class="info-row"><span class="info-label">Method</span><span>{{ order.get_payment_method_display }}</span></div>
+          {% if order.transaction_id %}
+          <div class="info-row"><span class="info-label">Txn ID</span><span class="text-success small">{{ order.transaction_id }}</span></div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Shipping -->
+      <div class="order-detail-card">
+        <div class="order-detail-header"><i class="bi bi-geo-alt-fill me-2"></i>Shipping Address</div>
+        <div class="order-detail-body">
+          <p class="mb-1 fw-600">{{ order.shipping_name }}</p>
+          <p class="mb-1"><i class="bi bi-telephone me-1"></i>{{ order.shipping_phone }}</p>
+          <p class="mb-0 text-muted">{{ order.shipping_address }}, {{ order.shipping_city }}, {{ order.shipping_state }} — {{ order.shipping_pincode }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

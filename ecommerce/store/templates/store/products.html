@@ -1,0 +1,135 @@
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block title %}Products — ShopVerse{% endblock %}
+
+{% block content %}
+<div class="page-header-sm">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb breadcrumb-custom mb-0">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+        <li class="breadcrumb-item active">Products</li>
+        {% if selected_category %}<li class="breadcrumb-item active">{{ selected_category.name }}</li>{% endif %}
+      </ol>
+    </nav>
+    <h1 class="page-title mt-2">
+      {% if selected_category %}{{ selected_category.name }}{% elif query %}Search: "{{ query }}"{% else %}All Products{% endif %}
+    </h1>
+  </div>
+</div>
+
+<div class="container section-padding">
+  <div class="row g-4">
+
+    <!-- ── SIDEBAR ── -->
+    <div class="col-lg-3">
+      <div class="filter-card">
+        <h6 class="filter-heading"><i class="bi bi-funnel me-2"></i>Filters</h6>
+
+        <!-- Category Filter -->
+        <div class="filter-section">
+          <p class="filter-label">Category</p>
+          <a href="{% url 'product_list' %}{% if query %}?q={{ query }}{% endif %}" class="filter-option {% if not category_slug %}active{% endif %}">
+            <i class="bi bi-grid me-2"></i>All Categories
+          </a>
+          {% for cat in categories %}
+          <a href="{% url 'product_list' %}?category={{ cat.slug }}{% if query %}&q={{ query }}{% endif %}" class="filter-option {% if category_slug == cat.slug %}active{% endif %}">
+            <i class="bi bi-tag me-2"></i>{{ cat.name }}
+            <span class="filter-count">{{ cat.products.count }}</span>
+          </a>
+          {% endfor %}
+        </div>
+
+        <!-- Sort -->
+        <div class="filter-section">
+          <p class="filter-label">Sort By</p>
+          {% for val,label in sort_options %}
+          <a href="?{% if category_slug %}category={{ category_slug }}&{% endif %}{% if query %}q={{ query }}&{% endif %}sort={{ val }}" class="filter-option {% if sort == val %}active{% endif %}">
+            {{ label }}
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PRODUCTS GRID ── -->
+    <div class="col-lg-9">
+      <!-- Toolbar -->
+      <div class="products-toolbar mb-4">
+        <span class="results-count">
+          <strong>{{ page_obj.paginator.count }}</strong> product{% if page_obj.paginator.count != 1 %}s{% endif %} found
+        </span>
+        <!-- Mobile sort -->
+        <select class="form-select form-select-sm sort-select d-lg-none" onchange="window.location=this.value">
+          {% for val,label in sort_options %}
+          <option value="?{% if category_slug %}category={{ category_slug }}&{% endif %}sort={{ val }}" {% if sort == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      {% if page_obj.object_list %}
+      <div class="row g-4">
+        {% for product in page_obj %}
+        <div class="col-6 col-md-4 col-xl-4">
+          <div class="product-card">
+            <a href="{% url 'product_detail' product.pk %}" class="product-img-link">
+              <img src="{{ product.image_url }}" alt="{{ product.name }}" class="product-img" loading="lazy"/>
+              {% if not product.in_stock %}
+              <div class="out-of-stock-overlay"><span>Out of Stock</span></div>
+              {% endif %}
+              <div class="product-overlay"><i class="bi bi-eye-fill"></i> View Details</div>
+            </a>
+            <div class="product-body">
+              <a href="{% url 'product_list' %}?category={{ product.category.slug }}" class="product-category">{{ product.category.name }}</a>
+              <h6 class="product-name"><a href="{% url 'product_detail' product.pk %}">{{ product.name }}</a></h6>
+              <p class="product-desc-sm">{{ product.description|truncatewords:8 }}</p>
+              <div class="product-footer">
+                <span class="product-price">₹{{ product.price }}</span>
+                {% if product.in_stock %}
+                <a href="{% url 'add_to_cart' product.pk %}" class="btn btn-add-cart" title="Add to Cart">
+                  <i class="bi bi-cart-plus"></i>
+                </a>
+                {% else %}
+                <span class="badge bg-danger-soft text-danger">Out of Stock</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if page_obj.has_other_pages %}
+      <div class="d-flex justify-content-center mt-5">
+        <nav>
+          <ul class="pagination pagination-custom">
+            {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if category_slug %}&category={{ category_slug }}{% endif %}{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"><i class="bi bi-chevron-left"></i></a></li>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+              <a class="page-link" href="?page={{ num }}{% if category_slug %}&category={{ category_slug }}{% endif %}{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">{{ num }}</a>
+            </li>
+            {% endfor %}
+            {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if category_slug %}&category={{ category_slug }}{% endif %}{% if query %}&q={{ query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"><i class="bi bi-chevron-right"></i></a></li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+      {% endif %}
+
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <h4>No products found</h4>
+        <p>Try adjusting your search or browse all categories.</p>
+        <a href="{% url 'product_list' %}" class="btn btn-primary-nav mt-2">Browse All</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

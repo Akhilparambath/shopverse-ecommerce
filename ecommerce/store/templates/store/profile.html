@@ -1,0 +1,164 @@
+{% extends 'store/base.html' %}
+{% block title %}My Profile — ShopVerse{% endblock %}
+
+{% block content %}
+<div class="page-header-sm">
+  <div class="container">
+    <h1 class="page-title"><i class="bi bi-person-circle me-2"></i>My Profile</h1>
+  </div>
+</div>
+
+<div class="container section-padding">
+  <div class="row g-4">
+    <!-- Stats -->
+    <div class="col-12">
+      <div class="row g-3">
+        <div class="col-6 col-md-3">
+          <div class="profile-stat-card">
+            <i class="bi bi-bag-check stat-icon text-primary"></i>
+            <div class="stat-num">{{ total_orders }}</div>
+            <div class="stat-label">Total Orders</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="profile-stat-card">
+            <i class="bi bi-check-circle stat-icon text-success"></i>
+            <div class="stat-num">{{ delivered }}</div>
+            <div class="stat-label">Delivered</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="profile-stat-card">
+            <i class="bi bi-clock stat-icon text-warning"></i>
+            <div class="stat-num">{{ pending }}</div>
+            <div class="stat-label">In Progress</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="profile-stat-card">
+            <i class="bi bi-cart3 stat-icon text-info"></i>
+            <div class="stat-num">{{ cart_count }}</div>
+            <div class="stat-label">In Cart</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Form -->
+    <div class="col-lg-7">
+      <div class="profile-card">
+        <h5 class="profile-card-title"><i class="bi bi-pencil-square me-2"></i>Edit Profile</h5>
+        <form method="post">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">First Name</label>
+              {{ form.first_name }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Last Name</label>
+              {{ form.last_name }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email</label>
+              {{ form.email }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Phone</label>
+              {{ form.phone }}
+            </div>
+            <div class="col-12">
+              <label class="form-label">Address</label>
+              {{ form.address }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">City</label>
+              {{ form.city }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">State</label>
+              {{ form.state }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">PIN Code</label>
+              {{ form.pincode }}
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary-nav mt-4 w-100">
+            <i class="bi bi-check-lg me-2"></i>Save Changes
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Account Info + Recent Orders -->
+    <div class="col-lg-5">
+      <div class="profile-card mb-4">
+        <h5 class="profile-card-title"><i class="bi bi-person me-2"></i>Account Info</h5>
+        <div class="profile-avatar-section">
+          <div class="profile-avatar-lg">{{ user.first_name|default:user.username|slice:":1"|upper }}</div>
+          <div>
+            <h5 class="mb-0">{{ user.get_full_name|default:user.username }}</h5>
+            <p class="text-muted mb-0">{{ user.email }}</p>
+            <small class="text-muted">Joined {{ user.date_joined|date:"M Y" }}</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="profile-card-title mb-0"><i class="bi bi-clock-history me-2"></i>Recent Orders</h5>
+          <a href="{% url 'order_history' %}" class="btn btn-sm btn-outline-view">View All</a>
+        </div>
+        {% for order in recent_orders %}
+        <div class="recent-order-row">
+          <div>
+            <div class="fw-500">#{{ order.order_id }}</div>
+            <small class="text-muted">{{ order.created_at|date:"d M" }}</small>
+          </div>
+          <span class="badge badge-status-{{ order.status|lower }}">{{ order.status }}</span>
+          <span class="fw-600">₹{{ order.total_amount }}</span>
+          <a href="{% url 'order_detail' order.order_id %}" class="btn btn-sm btn-icon-sm"><i class="bi bi-arrow-right"></i></a>
+        </div>
+        {% empty %}
+        <p class="text-muted text-center py-3">No orders yet.</p>
+        {% endfor %}
+      </div>
+      <!-- Loyalty Wallet Card -->
+      {% if wallet %}
+      <div class="profile-card mt-4" style="border: 1px solid #7c3aed; background: linear-gradient(135deg, #f5f3ff, #ede9fe);">
+        <h5 class="profile-card-title" style="color:#7c3aed;"><i class="bi bi-star-fill me-2"></i>Loyalty Wallet</h5>
+        <div class="row g-3 mb-3">
+          <div class="col-4 text-center">
+            <div style="font-size:1.6rem; font-weight:700; color:#7c3aed;">{{ wallet.points }}</div>
+            <div class="text-muted small">Available</div>
+          </div>
+          <div class="col-4 text-center">
+            <div style="font-size:1.6rem; font-weight:700; color:#16a34a;">{{ wallet.total_earned }}</div>
+            <div class="text-muted small">Total Earned</div>
+          </div>
+          <div class="col-4 text-center">
+            <div style="font-size:1.6rem; font-weight:700; color:#dc2626;">{{ wallet.total_redeemed }}</div>
+            <div class="text-muted small">Total Redeemed</div>
+          </div>
+        </div>
+        <div class="text-muted small mb-2 fw-semibold">Transaction History</div>
+        {% for txn in loyalty_transactions %}
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+          <div>
+            <span class="badge {% if txn.points > 0 %}bg-success{% else %}bg-danger{% endif %} me-2">
+              {% if txn.points > 0 %}+{% endif %}{{ txn.points }} pts
+            </span>
+            <small class="text-muted">{{ txn.description }}</small>
+          </div>
+          <small class="text-muted">{{ txn.created_at|date:"d M Y" }}</small>
+        </div>
+        {% empty %}
+        <p class="text-muted text-center py-2 mb-0 small">No transactions yet. Place an order to start earning!</p>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'store/base.html' %}
+{% block title %}Order Confirmed — ShopVerse{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="success-container text-center">
+    <div class="success-animation">
+      <div class="success-circle">
+        <i class="bi bi-check-lg success-check"></i>
+      </div>
+    </div>
+    <h2 class="success-title mt-4">Order Placed Successfully! 🎉</h2>
+    <p class="success-subtitle">Thank you, <strong>{{ order.shipping_name }}</strong>! Your order has been received.</p>
+
+    <div class="order-confirm-card mt-4">
+      <div class="row g-3 text-start">
+        <div class="col-md-6">
+          <div class="confirm-item"><span class="confirm-label">Order ID</span><span class="confirm-value text-primary fw-bold">#{{ order.order_id }}</span></div>
+        </div>
+        <div class="col-md-6">
+          <div class="confirm-item"><span class="confirm-label">Order Date</span><span class="confirm-value">{{ order.created_at|date:"d M Y, g:i A" }}</span></div>
+        </div>
+        <div class="col-md-6">
+          <div class="confirm-item"><span class="confirm-label">Payment Method</span><span class="confirm-value">{{ order.get_payment_method_display }}</span></div>
+        </div>
+        <div class="col-md-6">
+          <div class="confirm-item">
+            <span class="confirm-label">Payment Status</span>
+            <span class="badge bg-{{ order.payment_color }}">{{ order.payment_status }}</span>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="confirm-item"><span class="confirm-label">Deliver To</span>
+            <span class="confirm-value">{{ order.shipping_address }}, {{ order.shipping_city }}, {{ order.shipping_state }} — {{ order.shipping_pincode }}</span>
+          </div>
+        </div>
+        {% if order.transaction_id %}
+        <div class="col-12">
+          <div class="confirm-item"><span class="confirm-label">Transaction ID</span><span class="confirm-value text-success">{{ order.transaction_id }}</span></div>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="summary-divider my-3"></div>
+
+      <!-- Items -->
+      <h6 class="text-start mb-3">Items Ordered</h6>
+      {% for item in order.items.all %}
+      <div class="order-item-row">
+        <div class="flex-grow-1 text-start">
+          <div class="order-item-name">{{ item.product_name }}</div>
+          <small class="text-muted">₹{{ item.price }} × {{ item.quantity }}</small>
+        </div>
+        <span class="order-item-price">₹{{ item.subtotal }}</span>
+      </div>
+      {% endfor %}
+
+      <div class="summary-divider my-3"></div>
+      <div class="summary-total"><span>Total Paid</span><span>₹{{ order.total_amount }}</span></div>
+    </div>
+
+    <div class="status-tracker mt-5">
+      <h6 class="mb-3">Order Status</h6>
+      <div class="tracker">
+        {% for step in tracking_steps %}
+        <div class="tracker-step {% if order.status == step or order.status == 'Delivered' %}completed{% elif forloop.first %}active{% endif %}">
+          <div class="tracker-dot"></div>
+          <span class="tracker-label">{{ step }}</span>
+        </div>
+        {% if not forloop.last %}<div class="tracker-line"></div>{% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="d-flex gap-3 justify-content-center mt-5 flex-wrap">
+      <a href="{% url 'order_history' %}" class="btn btn-primary-nav"><i class="bi bi-bag-check me-2"></i>View My Orders</a>
+      <a href="{% url 'product_list' %}" class="btn btn-outline-view"><i class="bi bi-shop me-2"></i>Continue Shopping</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

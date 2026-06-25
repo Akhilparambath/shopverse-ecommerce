@@ -1,0 +1,174 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}ShopVerse — Premium Shopping{% endblock %}</title>
+  <meta name="description" content="{% block meta_desc %}ShopVerse — Discover premium products at great prices.{% endblock %}"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ── NAVBAR ─────────────────────────────────────── -->
+<nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="{% url 'home' %}">
+      <span class="brand-logo">🛍️</span>
+      <span class="brand-name">Shop<span class="brand-accent">Verse</span></span>
+    </a>
+
+    <form class="search-bar d-none d-lg-flex mx-4 flex-grow-1" action="{% url 'product_list' %}" method="get">
+      <div class="input-group">
+        <span class="input-group-text search-icon"><i class="bi bi-search"></i></span>
+        <input type="text" name="q" class="form-control search-input" placeholder="Search products, categories…" value="{{ request.GET.q }}"/>
+        <button class="btn btn-search-submit" type="submit">Search</button>
+      </div>
+    </form>
+
+    <div class="d-flex align-items-center gap-2">
+      <a href="{% url 'cart' %}" class="btn btn-icon-nav position-relative" title="Cart">
+        <i class="bi bi-cart3 fs-5"></i>
+        {% if cart_count > 0 %}
+        <span class="cart-badge-pill">{{ cart_count }}</span>
+        {% endif %}
+      </a>
+
+      {% if user.is_authenticated %}
+      <div class="dropdown">
+        <button class="btn btn-user-nav dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+          <div class="user-avatar">{{ user.first_name|default:user.username|slice:":1"|upper }}</div>
+          <span class="d-none d-md-inline ms-1">{{ user.first_name|default:user.username }}</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end dropdown-custom">
+          <li class="dropdown-header px-3 py-2">
+            <div class="fw-600">{{ user.get_full_name|default:user.username }}</div>
+            <small class="text-muted">{{ user.email }}</small>
+          </li>
+          <li><hr class="dropdown-divider my-1"/></li>
+          <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person-circle me-2"></i>My Profile</a></li>
+          <li><a class="dropdown-item" href="{% url 'order_history' %}"><i class="bi bi-bag-check me-2"></i>My Orders</a></li>
+          <li><a class="dropdown-item" href="{% url 'loyalty' %}" style="color:#a78bfa;"><i class="bi bi-star-fill me-2" style="color:#f59e0b;"></i>Loyalty Rewards</a></li>
+          <li><hr class="dropdown-divider my-1"/></li>
+          <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+        </ul>
+      </div>
+      {% else %}
+      <a href="{% url 'login' %}" class="btn btn-outline-nav">Login</a>
+      <a href="{% url 'register' %}" class="btn btn-primary-nav">Sign Up</a>
+      {% endif %}
+
+      <button class="navbar-toggler border-0 ms-1" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+        <i class="bi bi-list fs-4 text-white"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Nav -->
+  <div class="collapse navbar-collapse" id="navMenu">
+    <div class="container py-3">
+      <form class="d-flex d-lg-none mb-3" action="{% url 'product_list' %}" method="get">
+        <input type="text" name="q" class="form-control me-2" placeholder="Search…" value="{{ request.GET.q }}"/>
+        <button class="btn btn-primary-nav" type="submit"><i class="bi bi-search"></i></button>
+      </form>
+      <div class="d-flex flex-wrap gap-2">
+        {% for cat in all_categories %}
+        <a href="{% url 'product_list' %}?category={{ cat.slug }}" class="btn btn-sm btn-category-pill">{{ cat.name }}</a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ── MESSAGES ───────────────────────────────────── -->
+{% if messages %}
+<div class="toast-container position-fixed top-0 end-0 p-3" style="margin-top:70px;z-index:9999">
+  {% for message in messages %}
+  <div class="toast align-items-center show border-0 toast-{{ message.tags }}" role="alert">
+    <div class="d-flex">
+      <div class="toast-body">
+        {% if message.tags == 'success' %}<i class="bi bi-check-circle-fill me-2 text-success"></i>
+        {% elif message.tags == 'error' or message.tags == 'danger' %}<i class="bi bi-x-circle-fill me-2 text-danger"></i>
+        {% elif message.tags == 'warning' %}<i class="bi bi-exclamation-circle-fill me-2 text-warning"></i>
+        {% else %}<i class="bi bi-info-circle-fill me-2 text-info"></i>{% endif %}
+        {{ message }}
+      </div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ── MAIN CONTENT ───────────────────────────────── -->
+<main class="main-wrapper">
+  {% block content %}{% endblock %}
+</main>
+
+<!-- ── FOOTER ─────────────────────────────────────── -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="footer-brand mb-3">🛍️ <span class="brand-name">Shop<span class="brand-accent">Verse</span></span></div>
+        <p class="footer-desc">Your premium shopping destination. Quality products, unbeatable prices, and fast delivery.</p>
+        <div class="social-links mt-3">
+          <a href="#" class="social-btn"><i class="bi bi-facebook"></i></a>
+          <a href="#" class="social-btn"><i class="bi bi-instagram"></i></a>
+          <a href="#" class="social-btn"><i class="bi bi-twitter-x"></i></a>
+        </div>
+      </div>
+      <div class="col-6 col-lg-2">
+        <h6 class="footer-heading">Quick Links</h6>
+        <ul class="footer-links">
+          <li><a href="{% url 'home' %}">Home</a></li>
+          <li><a href="{% url 'product_list' %}">Products</a></li>
+          {% if user.is_authenticated %}
+          <li><a href="{% url 'cart' %}">Cart</a></li>
+          <li><a href="{% url 'order_history' %}">My Orders</a></li>
+          {% else %}
+          <li><a href="{% url 'login' %}">Login</a></li>
+          <li><a href="{% url 'register' %}">Register</a></li>
+          {% endif %}
+        </ul>
+      </div>
+      <div class="col-6 col-lg-3">
+        <h6 class="footer-heading">Categories</h6>
+        <ul class="footer-links">
+          {% for cat in all_categories|slice:":5" %}
+          <li><a href="{% url 'product_list' %}?category={{ cat.slug }}">{{ cat.name }}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="col-lg-3">
+        <h6 class="footer-heading">Contact</h6>
+        <ul class="footer-links">
+          <li><i class="bi bi-envelope me-2"></i>support@shopverse.in</li>
+          <li><i class="bi bi-telephone me-2"></i>+91 98765 43210</li>
+          <li><i class="bi bi-geo-alt me-2"></i>Mumbai, India</li>
+        </ul>
+      </div>
+    </div>
+    <hr class="footer-divider"/>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <p class="mb-0 footer-copy">&copy; 2024 ShopVerse. All rights reserved.</p>
+      <div class="payment-badges">
+        <span class="pay-badge">💳 Cards</span>
+        <span class="pay-badge">📱 UPI</span>
+        <span class="pay-badge">🚚 COD</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

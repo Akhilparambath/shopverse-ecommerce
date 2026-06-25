@@ -1,0 +1,69 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Login — ShopVerse</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+</head>
+<body class="admin-body">
+<div class="admin-auth-wrapper">
+  <div class="admin-auth-card">
+    <div class="admin-auth-logo">🛍️ <span class="brand-name">Shop<span class="brand-accent">Verse</span></span></div>
+    <h2 class="admin-auth-title">Admin Portal</h2>
+    <p class="admin-auth-subtitle text-muted">Sign in to manage your store</p>
+
+    {% if messages %}
+    {% for msg in messages %}
+    <div class="alert alert-danger py-2">{{ msg }}</div>
+    {% endfor %}
+    {% endif %}
+
+    <form method="post" id="adminLoginForm">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label"><i class="bi bi-envelope me-1"></i>Admin Email</label>
+        <input type="email" name="email" class="form-control admin-input" placeholder="admin@shop.com" value="admin@shop.com" required autofocus/>
+      </div>
+      <div class="mb-4">
+        <label class="form-label"><i class="bi bi-shield-lock me-1"></i>Password</label>
+        <div class="input-group">
+          <input type="password" name="password" id="adminPass" class="form-control admin-input" placeholder="••••••••" required/>
+          <button class="btn btn-outline-secondary" type="button" onclick="toggleAdminPass()"><i class="bi bi-eye" id="adminEye"></i></button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-admin-login w-100" id="adminLoginBtn">
+        <i class="bi bi-shield-check me-2"></i>Enter Admin Panel
+      </button>
+    </form>
+
+    <div class="admin-cred-hint mt-4">
+      <i class="bi bi-info-circle me-1 text-warning"></i>
+      <strong>Demo:</strong> admin@shop.com / admin123
+    </div>
+
+    <div class="text-center mt-3">
+      <a href="{% url 'home' %}" class="text-muted small"><i class="bi bi-arrow-left me-1"></i>Back to Store</a>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function toggleAdminPass() {
+  const inp = document.getElementById('adminPass');
+  const ico = document.getElementById('adminEye');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  ico.className = inp.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+}
+document.getElementById('adminLoginForm').addEventListener('submit', function() {
+  const btn = document.getElementById('adminLoginBtn');
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Authenticating…';
+  btn.disabled = true;
+});
+</script>
+</body>
+</html>

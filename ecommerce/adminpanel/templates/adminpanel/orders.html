@@ -1,0 +1,67 @@
+{% extends 'adminpanel/base.html' %}
+{% block title %}Orders — Admin{% endblock %}
+{% block page_title %}Orders{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h4 class="admin-page-heading mb-1">Order Management</h4>
+    <p class="text-muted small mb-0">{{ orders.count }} orders total</p>
+  </div>
+</div>
+
+<!-- Status Filter Pills -->
+<div class="status-filter-bar mb-4">
+  <a href="{% url 'admin_orders' %}" class="status-pill {% if not status_filter %}active{% endif %}">All</a>
+  {% for status in status_list %}
+  <a href="?status={{ status }}" class="status-pill status-pill-{{ status|lower }} {% if status_filter == status %}active{% endif %}">{{ status }}</a>
+  {% endfor %}
+</div>
+
+<div class="admin-card">
+  <div class="admin-card-body p-0">
+    <div class="table-responsive">
+      <table class="table admin-table mb-0">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Items</th>
+            <th>Amount</th>
+            <th>Payment</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+          <tr>
+            <td><span class="order-id-tag">#{{ order.order_id }}</span></td>
+            <td>
+              <div>{{ order.user.get_full_name|default:order.user.username }}</div>
+              <small class="text-muted">{{ order.user.email }}</small>
+            </td>
+            <td class="text-center">{{ order.items.count }}</td>
+            <td class="fw-600">₹{{ order.total_amount }}</td>
+            <td>
+              <div><span class="badge badge-payment-{{ order.payment_status|lower }}">{{ order.payment_status }}</span></div>
+              <small class="text-muted">{{ order.get_payment_method_display }}</small>
+            </td>
+            <td><span class="badge badge-status-{{ order.status|lower }}">{{ order.status }}</span></td>
+            <td class="text-muted small">{{ order.created_at|date:"d M Y" }}</td>
+            <td>
+              <a href="{% url 'admin_order_detail' order.order_id %}" class="btn btn-xs btn-outline-primary">
+                <i class="bi bi-pencil-square me-1"></i>Manage
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" class="text-center py-4 text-muted">No orders found</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends 'adminpanel/base.html' %}
+{% block title %}Customers — Admin{% endblock %}
+{% block page_title %}Customers{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h4 class="admin-page-heading mb-1">Customer Management</h4>
+    <p class="text-muted small mb-0">{{ users.count }} customers registered</p>
+  </div>
+</div>
+
+<!-- Search -->
+<div class="admin-card mb-4">
+  <div class="admin-card-body">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-md-6">
+        <label class="form-label small text-muted">Search Customers</label>
+        <input type="text" name="q" class="form-control admin-input" placeholder="Search by username or email…" value="{{ query }}"/>
+      </div>
+      <div class="col-md-3">
+        <button type="submit" class="btn btn-admin-secondary w-100"><i class="bi bi-search me-1"></i>Search</button>
+      </div>
+      {% if query %}
+      <div class="col-md-3">
+        <a href="{% url 'admin_users' %}" class="btn btn-outline-secondary w-100">Clear</a>
+      </div>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<div class="admin-card">
+  <div class="admin-card-body p-0">
+    <div class="table-responsive">
+      <table class="table admin-table mb-0">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Customer</th>
+            <th>Phone</th>
+            <th>Orders</th>
+            <th>Joined</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+          <tr>
+            <td class="text-muted small">{{ forloop.counter }}</td>
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                <div class="admin-user-avatar-sm">{{ user.first_name|default:user.username|slice:":1"|upper }}</div>
+                <div>
+                  <div class="fw-500">{{ user.get_full_name|default:user.username }}</div>
+                  <small class="text-muted">{{ user.email }}</small>
+                </div>
+              </div>
+            </td>
+            <td class="text-muted small">
+              {% if user.userprofile.phone %}{{ user.userprofile.phone }}{% else %}—{% endif %}
+            </td>
+            <td class="text-center fw-500">{{ user.order_count }}</td>
+            <td class="text-muted small">{{ user.date_joined|date:"d M Y" }}</td>
+            <td>
+              {% if user.userprofile.is_blocked %}
+              <span class="badge bg-danger-soft text-danger"><i class="bi bi-slash-circle me-1"></i>Blocked</span>
+              {% else %}
+              <span class="badge bg-success-soft text-success"><i class="bi bi-check-circle me-1"></i>Active</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                <a href="{% url 'admin_toggle_user' user.pk %}" class="btn btn-xs {% if user.userprofile.is_blocked %}btn-outline-success{% else %}btn-outline-warning{% endif %}"
+                   onclick="return confirm('{% if user.userprofile.is_blocked %}Activate this user?{% else %}Block this user?{% endif %}')" title="{% if user.userprofile.is_blocked %}Activate{% else %}Block{% endif %}">
+                  <i class="bi {% if user.userprofile.is_blocked %}bi-check-circle{% else %}bi-slash-circle{% endif %}"></i>
+                  {% if user.userprofile.is_blocked %}Activate{% else %}Block{% endif %}
+                </a>
+                <a href="{% url 'admin_delete_user' user.pk %}" class="btn btn-xs btn-outline-danger" onclick="return confirm('Delete this user permanently?')" title="Delete">
+                  <i class="bi bi-trash3"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="text-center py-4 text-muted">No customers found</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

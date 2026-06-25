@@ -1,0 +1,120 @@
+{% extends 'adminpanel/base.html' %}
+{% block title %}{{ action }} Product — Admin{% endblock %}
+{% block page_title %}{{ action }} Product{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4">
+  <a href="{% url 'admin_products' %}" class="btn btn-icon-admin"><i class="bi bi-arrow-left"></i></a>
+  <h4 class="admin-page-heading mb-0">{{ action }} Product</h4>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <form method="post" enctype="multipart/form-data" id="productForm">
+      {% csrf_token %}
+      <div class="admin-card mb-4">
+        <div class="admin-card-header"><i class="bi bi-info-circle me-2"></i>Product Information</div>
+        <div class="admin-card-body">
+          <div class="mb-3">
+            <label class="form-label">Product Name *</label>
+            {{ form.name }}
+            {% if form.name.errors %}<div class="invalid-feedback d-block">{{ form.name.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description *</label>
+            {{ form.description }}
+          </div>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Category *</label>
+              {{ form.category }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Price (₹) *</label>
+              {{ form.price }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Stock Quantity *</label>
+              {{ form.stock }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card mb-4">
+        <div class="admin-card-header"><i class="bi bi-image me-2"></i>Product Image</div>
+        <div class="admin-card-body">
+          {% if product and product.image %}
+          <div class="current-img-preview mb-3">
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="admin-product-preview"/>
+            <p class="text-muted small mt-1">Current image</p>
+          </div>
+          {% endif %}
+          <div class="image-upload-area" id="imageUploadArea">
+            {{ form.image }}
+            <div class="upload-placeholder" id="uploadPlaceholder">
+              <i class="bi bi-cloud-upload fs-2 text-muted"></i>
+              <p class="mb-0 mt-2 text-muted">Click to upload or drag & drop</p>
+              <small class="text-muted">JPG, PNG, WEBP up to 5MB</small>
+            </div>
+            <img id="imagePreview" class="admin-product-preview" style="display:none"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card mb-4">
+        <div class="admin-card-header"><i class="bi bi-toggle-on me-2"></i>Visibility</div>
+        <div class="admin-card-body">
+          <div class="form-check form-switch">
+            {{ form.is_active }}
+            <label class="form-check-label ms-2">Product is Active (visible to customers)</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-admin-primary">
+          <i class="bi bi-check-lg me-2"></i>{{ action }} Product
+        </button>
+        <a href="{% url 'admin_products' %}" class="btn btn-outline-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="admin-card">
+      <div class="admin-card-header"><i class="bi bi-lightbulb me-2"></i>Tips</div>
+      <div class="admin-card-body">
+        <ul class="tips-list">
+          <li>Use a clear, descriptive product name</li>
+          <li>Write detailed descriptions with features & benefits</li>
+          <li>Upload high-quality images (min 400×400px)</li>
+          <li>Set accurate stock levels to avoid overselling</li>
+          <li>Inactive products won't show to customers</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const imageInput = document.querySelector('input[type="file"]');
+if (imageInput) {
+  imageInput.classList.add('d-none');
+  document.getElementById('imageUploadArea').addEventListener('click', () => imageInput.click());
+  imageInput.addEventListener('change', function() {
+    if (this.files && this.files[0]) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        document.getElementById('imagePreview').src = e.target.result;
+        document.getElementById('imagePreview').style.display = 'block';
+        document.getElementById('uploadPlaceholder').style.display = 'none';
+      };
+      reader.readAsDataURL(this.files[0]);
+    }
+  });
+}
+</script>
+{% endblock %}

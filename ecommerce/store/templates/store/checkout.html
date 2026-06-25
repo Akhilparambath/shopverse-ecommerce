@@ -1,0 +1,222 @@
+{% extends 'store/base.html' %}
+{% load static %}
+
+{% block title %}Checkout — ShopVerse{% endblock %}
+
+{% block content %}
+<div class="page-header-sm">
+  <div class="container">
+    <h1 class="page-title">Checkout</h1>
+    <!-- Steps -->
+    <div class="checkout-steps mt-2">
+      <div class="step active"><span class="step-num">1</span> Shipping</div>
+      <div class="step-line"></div>
+      <div class="step active"><span class="step-num">2</span> Payment</div>
+      <div class="step-line"></div>
+      <div class="step"><span class="step-num">3</span> Confirm</div>
+    </div>
+  </div>
+</div>
+
+<div class="container section-padding">
+  <form method="post" id="checkoutForm">
+    {% csrf_token %}
+    <div class="row g-4">
+
+      <!-- LEFT: Shipping + Payment -->
+      <div class="col-lg-8">
+        <!-- Shipping Address -->
+        <div class="checkout-card mb-4">
+          <div class="checkout-card-header">
+            <i class="bi bi-geo-alt-fill me-2"></i>Shipping Address
+          </div>
+          <div class="checkout-card-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Full Name *</label>
+                {{ form.shipping_name }}
+                {% if form.shipping_name.errors %}<div class="invalid-feedback d-block">{{ form.shipping_name.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Phone Number *</label>
+                {{ form.shipping_phone }}
+              </div>
+              <div class="col-12">
+                <label class="form-label">Address *</label>
+                {{ form.shipping_address }}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">City *</label>
+                {{ form.shipping_city }}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">State *</label>
+                {{ form.shipping_state }}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">PIN Code *</label>
+                {{ form.shipping_pincode }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Method -->
+        <div class="checkout-card">
+          <div class="checkout-card-header">
+            <i class="bi bi-credit-card-fill me-2"></i>Payment Method
+          </div>
+          <div class="checkout-card-body">
+            <div class="payment-options">
+              <label class="payment-option {% if form.payment_method.value == 'COD' %}selected{% endif %}" id="pay-cod">
+                <input type="radio" name="payment_method" value="COD" {% if not form.payment_method.value or form.payment_method.value == 'COD' %}checked{% endif %} class="d-none" onchange="selectPayment(this)"/>
+                <div class="pay-icon">🚚</div>
+                <div>
+                  <strong>Cash on Delivery</strong>
+                  <small class="d-block text-muted">Pay when your order arrives</small>
+                </div>
+                <i class="bi bi-check-circle-fill pay-check ms-auto"></i>
+              </label>
+
+              <label class="payment-option" id="pay-upi">
+                <input type="radio" name="payment_method" value="UPI" class="d-none" onchange="selectPayment(this)"/>
+                <div class="pay-icon">📱</div>
+                <div>
+                  <strong>UPI Payment</strong>
+                  <small class="d-block text-muted">Google Pay, PhonePe, Paytm</small>
+                </div>
+                <i class="bi bi-check-circle-fill pay-check ms-auto"></i>
+              </label>
+
+              <label class="payment-option" id="pay-card">
+                <input type="radio" name="payment_method" value="Card" class="d-none" onchange="selectPayment(this)"/>
+                <div class="pay-icon">💳</div>
+                <div>
+                  <strong>Credit / Debit Card</strong>
+                  <small class="d-block text-muted">Visa, Mastercard, RuPay</small>
+                </div>
+                <i class="bi bi-check-circle-fill pay-check ms-auto"></i>
+              </label>
+            </div>
+
+            <div id="razorpayNotice" class="mt-3 text-primary secure-note" style="display:none">
+              <i class="bi bi-shield-lock-fill me-1"></i> You will be securely redirected to the payment gateway (Stripe/Razorpay) to complete your payment.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Order Summary -->
+      <div class="col-lg-4">
+        <!-- Loyalty Points Redemption Card -->
+        {% if wallet and wallet.points >= loyalty_config.min_redemption_points %}
+        <div class="checkout-card mb-3" style="border: 1px solid #7c3aed; background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);">
+          <div class="checkout-card-header" style="background: linear-gradient(90deg, #7c3aed, #a78bfa); color: white;">
+            <i class="bi bi-star-fill me-2"></i>Loyalty Points
+          </div>
+          <div class="checkout-card-body">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="fw-semibold">Available Points</span>
+              <span class="badge" style="background:#7c3aed; font-size:1rem; padding: 6px 14px;">&#11088; {{ wallet.points }}</span>
+            </div>
+            <small class="text-muted d-block mb-3">
+              1 point = &#8377;{{ loyalty_config.point_value_in_currency }} discount &bull; Min {{ loyalty_config.min_redemption_points }} pts to redeem
+            </small>
+            <div class="input-group">
+              <input type="number" id="redeemPointsInput" name="redeem_points" class="form-control"
+                placeholder="Enter points to redeem" min="{{ loyalty_config.min_redemption_points }}"
+                max="{{ wallet.points }}" value="0" oninput="updateDiscount(this.value)">
+              <button type="button" class="btn btn-outline-secondary" onclick="applyMaxPoints()">Max</button>
+            </div>
+            <div id="discountPreview" class="mt-2 text-success fw-semibold" style="display:none;">
+              <i class="bi bi-check-circle-fill me-1"></i> You save &#8377;<span id="discountAmt">0</span>
+            </div>
+          </div>
+        </div>
+        {% elif wallet %}
+        <div class="checkout-card mb-3" style="background: #f8f9fa; border: 1px dashed #ccc;">
+          <div class="checkout-card-body text-center py-3">
+            <i class="bi bi-star text-muted" style="font-size:1.5rem;"></i>
+            <p class="mt-2 mb-0 text-muted small">You have <strong>{{ wallet.points }} pts</strong>. Earn {{ loyalty_config.min_redemption_points }} pts to start redeeming!</p>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="summary-card sticky-top" style="top:90px">
+          <h5 class="summary-title"><i class="bi bi-receipt me-2"></i>Order Summary</h5>
+          {% for item in cart_items %}
+          <div class="order-item-row">
+            <img src="{{ item.product.image_url }}" class="order-item-thumb" alt="{{ item.product.name }}"/>
+            <div class="flex-grow-1">
+              <div class="order-item-name">{{ item.product.name|truncatewords:4 }}</div>
+              <small class="text-muted">Qty: {{ item.quantity }}</small>
+            </div>
+            <span class="order-item-price">&#8377;{{ item.subtotal }}</span>
+          </div>
+          {% endfor %}
+          <div class="summary-divider mt-2"></div>
+          <div class="summary-row"><span>Subtotal</span><span>&#8377;{{ subtotal }}</span></div>
+          <div class="summary-row"><span>GST (18%)</span><span>&#8377;{{ tax }}</span></div>
+          <div class="summary-row text-success"><span>Delivery</span><span>{% if subtotal > 999 %}FREE{% else %}&#8377;49{% endif %}</span></div>
+          {% if discount > 0 %}
+          <div class="summary-row text-success fw-semibold"><span>&#11088; Points Discount</span><span>- &#8377;{{ discount }}</span></div>
+          {% endif %}
+          <div class="summary-divider"></div>
+          <div class="summary-total"><span>Total</span><span>&#8377;{{ total }}</span></div>
+          <button type="submit" class="btn btn-checkout w-100 mt-3" id="placeOrderBtn">
+            <i class="bi bi-check2-circle me-2"></i>Place Order
+          </button>
+          <div class="secure-note mt-2"><i class="bi bi-shield-lock me-1"></i>Secured with 256-bit encryption</div>
+        </div>
+      </div>
+
+
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var POINT_VALUE = {{ loyalty_config.point_value_in_currency|default:1 }};
+var MAX_POINTS = {{ wallet.points|default:0 }};
+var SUBTOTAL_TOTAL = {{ total|default:0 }};
+var MAX_REDEEM_PERCENT = {{ loyalty_config.max_redemption_percent|default:50 }};
+
+function selectPayment(radio) {
+  document.querySelectorAll('.payment-option').forEach(el => el.classList.remove('selected'));
+  radio.closest('.payment-option').classList.add('selected');
+  document.getElementById('razorpayNotice').style.display = (radio.value === 'UPI' || radio.value === 'Card') ? 'block' : 'none';
+}
+
+function updateDiscount(val) {
+  var pts = parseInt(val) || 0;
+  var preview = document.getElementById('discountPreview');
+  var discAmt = document.getElementById('discountAmt');
+  if (pts > 0) {
+    var disc = pts * POINT_VALUE;
+    var maxDisc = SUBTOTAL_TOTAL * (MAX_REDEEM_PERCENT / 100);
+    if (disc > maxDisc) disc = maxDisc;
+    discAmt.textContent = disc.toFixed(2);
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+function applyMaxPoints() {
+  var input = document.getElementById('redeemPointsInput');
+  if (input) {
+    input.value = MAX_POINTS;
+    updateDiscount(MAX_POINTS);
+  }
+}
+
+document.getElementById('placeOrderBtn').addEventListener('click', function() {
+  this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing…';
+  this.disabled = true;
+  this.closest('form').submit();
+});
+</script>
+{% endblock %}
+

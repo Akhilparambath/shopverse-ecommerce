@@ -1,0 +1,125 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Admin Panel — ShopVerse{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="admin-body">
+
+<div class="admin-layout">
+
+  <!-- ── SIDEBAR ──────────────────────────────── -->
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">🛍️ <span>Shop<span class="brand-accent">Verse</span></span></div>
+      <div class="sidebar-subtitle">Admin Panel</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <a href="{% url 'admin_dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+        <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+      </a>
+
+      <div class="nav-section-label mt-3">Catalogue</div>
+      <a href="{% url 'admin_products' %}" class="sidebar-link {% if 'product' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-box-seam"></i><span>Products</span>
+      </a>
+
+      <div class="nav-section-label mt-3">Operations</div>
+      <a href="{% url 'admin_orders' %}" class="sidebar-link {% if 'order' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-bag-check"></i><span>Orders</span>
+        {% with pending_count=pending_orders_count %}
+        {% if pending_count %}<span class="sidebar-badge">{{ pending_count }}</span>{% endif %}
+        {% endwith %}
+      </a>
+      <a href="{% url 'admin_users' %}" class="sidebar-link {% if 'user' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-people"></i><span>Customers</span>
+      </a>
+
+      <div class="nav-section-label mt-3">Settings</div>
+      <a href="{% url 'admin_loyalty_settings' %}" class="sidebar-link {% if request.resolver_match.url_name == 'admin_loyalty_settings' %}active{% endif %}">
+        <i class="bi bi-star"></i><span>Loyalty Settings</span>
+      </a>
+
+      <div class="nav-section-label mt-3">Account</div>
+      <a href="{% url 'home' %}" class="sidebar-link" target="_blank">
+        <i class="bi bi-shop"></i><span>View Store</span>
+        <i class="bi bi-arrow-up-right ms-auto small"></i>
+      </a>
+      <a href="{% url 'admin_logout' %}" class="sidebar-link text-danger">
+        <i class="bi bi-box-arrow-left"></i><span>Logout</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="admin-user-info">
+        <div class="admin-avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}</div>
+        <div>
+          <div class="fw-600 small">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="text-muted" style="font-size:11px">Administrator</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ─────────────────────────────────── -->
+  <div class="admin-main">
+    <!-- Top Bar -->
+    <header class="admin-topbar">
+      <button class="btn btn-icon-admin" onclick="toggleSidebar()" id="sidebarToggle">
+        <i class="bi bi-list fs-5"></i>
+      </button>
+      <div class="topbar-title">{% block page_title %}Dashboard{% endblock %}</div>
+      <div class="topbar-right">
+        <span class="text-muted small d-none d-md-block">{{ "now"|date:"D, d M Y" }}</span>
+        <a href="{% url 'home' %}" class="btn btn-sm btn-outline-secondary ms-2" target="_blank">
+          <i class="bi bi-eye me-1"></i>Store
+        </a>
+      </div>
+    </header>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="px-4 pt-3">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show py-2" role="alert">
+        {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Content -->
+    <div class="admin-content">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/main.js' %}"></script>
+<script>
+function toggleSidebar() {
+  document.getElementById('adminSidebar').classList.toggle('collapsed');
+}
+// Auto-dismiss alerts
+setTimeout(() => {
+  document.querySelectorAll('.alert').forEach(el => {
+    const a = bootstrap.Alert.getOrCreateInstance(el);
+    if (a) a.close();
+  });
+}, 4000);
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

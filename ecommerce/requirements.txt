@@ -1,0 +1,7 @@
+Django>=5.0
+Pillow>=10.0
+stripe
+razorpay
+gunicorn
+whitenoise
+celery

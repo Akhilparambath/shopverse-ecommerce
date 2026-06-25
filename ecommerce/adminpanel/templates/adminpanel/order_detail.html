@@ -1,0 +1,121 @@
+{% extends 'adminpanel/base.html' %}
+{% block title %}Order #{{ order.order_id }} — Admin{% endblock %}
+{% block page_title %}Order Detail{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
+  <a href="{% url 'admin_orders' %}" class="btn btn-icon-admin"><i class="bi bi-arrow-left"></i></a>
+  <h4 class="admin-page-heading mb-0">Order #{{ order.order_id }}</h4>
+  <span class="badge badge-status-{{ order.status|lower }} ms-2">{{ order.status }}</span>
+</div>
+
+<div class="row g-4">
+  <!-- Left -->
+  <div class="col-lg-8">
+    <!-- Items -->
+    <div class="admin-card mb-4">
+      <div class="admin-card-header"><i class="bi bi-box-seam me-2"></i>Order Items</div>
+      <div class="admin-card-body p-0">
+        <table class="table admin-table mb-0">
+          <thead><tr><th>Product</th><th>Price</th><th>Qty</th><th>Subtotal</th></tr></thead>
+          <tbody>
+            {% for item in order.items.all %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-3">
+                  {% if item.product %}
+                  <img src="{{ item.product.image_url }}" class="admin-product-thumb" alt=""/>
+                  {% endif %}
+                  <span>{{ item.product_name }}</span>
+                </div>
+              </td>
+              <td>₹{{ item.price }}</td>
+              <td>{{ item.quantity }}</td>
+              <td class="fw-600">₹{{ item.subtotal }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            {% if order.discount_amount > 0 %}
+            <tr class="table-success">
+              <td colspan="3" class="text-end fw-600">&#11088; Points Discount</td>
+              <td class="fw-600 text-success">- &#8377;{{ order.discount_amount }}</td>
+            </tr>
+            {% endif %}
+            <tr><td colspan="3" class="text-end fw-600">Total</td><td class="fw-700 text-primary fs-5">&#8377;{{ order.total_amount }}</td></tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Update Status -->
+    <div class="admin-card">
+      <div class="admin-card-header"><i class="bi bi-arrow-repeat me-2"></i>Update Order Status</div>
+      <div class="admin-card-body">
+        <form method="post">
+          {% csrf_token %}
+          <div class="row g-3 align-items-end">
+            <div class="col-md-6">
+              <label class="form-label">Current Status: <span class="badge badge-status-{{ order.status|lower }}">{{ order.status }}</span></label>
+              {{ form.status }}
+            </div>
+            <div class="col-md-3">
+              <button type="submit" class="btn btn-admin-primary w-100"><i class="bi bi-check-lg me-1"></i>Update</button>
+            </div>
+          </div>
+        </form>
+
+        <!-- Status Timeline -->
+        <div class="status-progress mt-4">
+          {% for step in tracking_steps %}
+          <div class="status-step {% if order.status == step %}current{% elif step == 'Delivered' and order.status == 'Delivered' %}done{% elif step == 'Pending' %}done{% elif step == 'Processing' and order.status != 'Pending' %}done{% elif step == 'Shipped' and order.status in 'Shipped,Delivered' %}done{% endif %}">
+            <div class="status-step-dot"></div>
+            <span>{{ step }}</span>
+          </div>
+          {% if not forloop.last %}<div class="status-step-line"></div>{% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right -->
+  <div class="col-lg-4">
+    <div class="admin-card mb-3">
+      <div class="admin-card-header"><i class="bi bi-info-circle me-2"></i>Order Info</div>
+      <div class="admin-card-body">
+        <div class="info-row"><span class="info-label">Order ID</span><span class="text-primary fw-bold">#{{ order.order_id }}</span></div>
+        <div class="info-row"><span class="info-label">Date</span><span>{{ order.created_at|date:"d M Y, g:i A" }}</span></div>
+        <div class="info-row"><span class="info-label">Payment</span><span class="badge badge-payment-{{ order.payment_status|lower }}">{{ order.payment_status }}</span></div>
+        <div class="info-row"><span class="info-label">Method</span><span>{{ order.get_payment_method_display }}</span></div>
+        {% if order.transaction_id %}
+        <div class="info-row"><span class="info-label">Txn ID</span><span class="text-success small">{{ order.transaction_id }}</span></div>
+        {% endif %}
+        {% if order.points_redeemed > 0 %}
+        <div class="info-row"><span class="info-label">&#11088; Pts Redeemed</span><span class="text-danger fw-600">{{ order.points_redeemed }} pts</span></div>
+        {% endif %}
+        {% if order.points_earned > 0 %}
+        <div class="info-row"><span class="info-label">&#11088; Pts Earned</span><span class="text-success fw-600">+{{ order.points_earned }} pts</span></div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="admin-card mb-3">
+      <div class="admin-card-header"><i class="bi bi-person me-2"></i>Customer</div>
+      <div class="admin-card-body">
+        <div class="fw-600">{{ order.user.get_full_name|default:order.user.username }}</div>
+        <div class="text-muted small">{{ order.user.email }}</div>
+      </div>
+    </div>
+
+    <div class="admin-card">
+      <div class="admin-card-header"><i class="bi bi-geo-alt-fill me-2"></i>Shipping Address</div>
+      <div class="admin-card-body">
+        <p class="fw-500 mb-1">{{ order.shipping_name }}</p>
+        <p class="mb-1 text-muted small"><i class="bi bi-telephone me-1"></i>{{ order.shipping_phone }}</p>
+        <p class="text-muted small mb-0">{{ order.shipping_address }}<br>{{ order.shipping_city }}, {{ order.shipping_state }} — {{ order.shipping_pincode }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
